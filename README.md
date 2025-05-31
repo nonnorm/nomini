@@ -1,8 +1,6 @@
-<img src="https://raw.githubusercontent.com/aidenybai/dababy/main/.github/dababy.jpg" width="100" align="right">
-
 # Dababy
 
-Data binding so simple even DaBaby could do it!
+Data binding so simple even DaBaby could do it, now made reactive!
 
 ## Installation
 
@@ -15,13 +13,13 @@ Put this script tag between the `<head>` tags of your webpage.
 ## Dababy Quote Generator Example
 
 ```html
-<div data="{ quotes: ['LES GO', 'LESS GO', 'LESSS GO'] }">
-  <button ref="quote" bind="{
+<div data="{ quotes: ['LES GO', 'LESS GO', 'LESSS GO'], currentQuote: 'LES GO' }">
+  <button bind="{
     onclick: () => {
-      const quote = quotes[Math.floor(Math.random() * quotes.length)];
-      refs.quote.innerHTML = quote;
-    }
-  }"><button>
+      data.currentQuote = data.quotes[Math.floor(Math.random() * data.quotes.length)];
+    },
+    textContent: data.currentQuote
+  }"></button>
 </div>
 ```
 
@@ -47,20 +45,7 @@ Add the `bind` attribute to an element to bind properties, basically anything yo
 
 ```html
 <div data="{ name: 'Dababy' }">
-  <p bind="{ innerHTML: name }"><!-- Dababy --></p>
-</div>
-```
-
-### Refs
-
-Add the `ref` attribute to create markers that act like shorthands for `document.querySelector`. Attach it to an element and name it in the attribute value, then access it later by doing `refs.<name>`
-
-**Example:**
-
-```html
-<div data="{ name: 'Dababy' }">
-  <p ref="name">: turned into a convertable</p>
-  <p bind="{ innerHTML: name + refs.name.innerHTML }"><!-- Dababy: turned into a convertable --></p>
+  <p bind="{ innerHTML: data.name }"><!-- Dababy --></p>
 </div>
 ```
 

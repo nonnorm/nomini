@@ -1,7 +1,0 @@
-node_modules/
-test*.html
-src/*
-yarn.lock
-.gitignore
-.github/
-build.sh
