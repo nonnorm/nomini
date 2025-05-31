@@ -1,24 +1,16 @@
-# Dababy
+# Nomini
 
-Data binding so simple even DaBaby could do it, now made reactive!
+A minimal implementation of data binding, intended for use in SSR apps.
 
-## Installation
-
-Put this script tag between the `<head>` tags of your webpage.
-
-```html
-<script src="https://unpkg.com/dababy"></script>
-```
-
-## Dababy Quote Generator Example
+## Quote Generator Example
 
 ```html
 <div data="{ quotes: ['LES GO', 'LESS GO', 'LESSS GO'], currentQuote: 'LES GO' }">
   <button bind="{
     onclick: () => {
-      data.currentQuote = data.quotes[Math.floor(Math.random() * data.quotes.length)];
+      currentQuote = quotes[Math.floor(Math.random() * quotes.length)];
     },
-    textContent: data.currentQuote
+    textContent: currentQuote
   }"></button>
 </div>
 ```
@@ -27,28 +19,24 @@ Put this script tag between the `<head>` tags of your webpage.
 
 ### Data
 
-Add the `data` attribute to an element to get started. The value of the attribute should be an object literal. Anything under that element will be able to access the data as global variables when binding.
+Add the `data` attribute to an element to get started. The value of the attribute should be an object literal. Anything under that element will be able to access the data as global variables when binding. Note that elements will only be able to access data from their closest data-containing parent, and nested data-containing elements will not merge. 
 
 **Example:**
 
 ```html
-<div data="{ name: 'Dababy' }">
+<div data="{ name: 'Jeff' }">
   <!-- content here -->
 </div>
 ```
 
 ### Bind
 
-Add the `bind` attribute to an element to bind properties, basically anything you can access in JavaScript like `innerHTML`, `onclick`, `style`, `id`, etc. This will attach it to the element
+Add the `bind` attribute to an element to bind properties, basically anything you can access in JavaScript like `innerHTML`, `onclick`, `id`, etc. This will attach it to the element reactively, so whenever the data changes it will be re-bound.
 
 **Example:**
 
 ```html
-<div data="{ name: 'Dababy' }">
-  <p bind="{ innerHTML: data.name }"><!-- Dababy --></p>
+<div data="{ name: 'Jeff' }">
+  <p bind="{ textContent: name }"><!-- Jeff --></p>
 </div>
 ```
-
----
-
-© 2021 Aiden Bai
