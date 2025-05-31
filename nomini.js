@@ -44,5 +44,5 @@
     };
 
     document.addEventListener("DOMContentLoaded", () => init());
-    document.addEventListener("dababy:process", (e) => init(e.target));
+    document.addEventListener("nomini:process", (e) => init(e.target));
 })();
