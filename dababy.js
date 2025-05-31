@@ -4,24 +4,29 @@
         return new Function("data", `return ${expression}`).call(thisArg, data);
     };
 
-    document.querySelectorAll("[data]").forEach((dataEl) => {
-        const rawData = evalExpression(dataEl.getAttribute("data") || undefined);
+    const init = (baseEl = document) => {
+        baseEl.querySelectorAll("[data]").forEach((dataEl) => {
+            const rawData = evalExpression(dataEl.getAttribute("data") || undefined);
 
-        const renderBinds = () => {
-            dataEl.querySelectorAll(":not([data]) [bind]").forEach((bindEl) => {
-                const props = evalExpression(bindEl.getAttribute("bind") || undefined, proxyData, bindEl);
-                Object.entries(props).forEach(([key, value]) => bindEl[key] = value);
+            const renderBinds = () => {
+                dataEl.querySelectorAll(":not([data]) [bind]").forEach((bindEl) => {
+                    const props = evalExpression(bindEl.getAttribute("bind") || undefined, proxyData, bindEl);
+                    Object.entries(props).forEach(([key, value]) => bindEl[key] = value);
+                });
+            };
+
+            const proxyData = new Proxy(rawData, {
+                set(obj, prop, val) {
+                    obj[prop] = val;
+                    renderBinds();
+                    return true;
+                }
             });
-        };
 
-        const proxyData = new Proxy(rawData, {
-            set(obj, prop, val) {
-                obj[prop] = val;
-                renderBinds();
-                return true;
-            }
+            renderBinds();
         });
+    }
 
-        renderBinds();
-    });
+    document.addEventListener("DOMContentLoaded", () => init());
+    document.addEventListener("dababy:process", (e) => init(e.target));
 })()
