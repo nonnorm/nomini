@@ -1,17 +1,12 @@
 // Inspired by aidenybai/dababy
 (() => {
     const evalExpression = (expression = "{}", data = {}, thisArg = window) => {
-        return new Function(
-            "__data",
-            `with(__data) { return ${expression} }`,
-        ).call(thisArg, data);
+        return new Function("__data", `with(__data) { return ${expression} }`).call(thisArg, data);
     };
 
     const init = (baseEl = document) => {
         baseEl.querySelectorAll("[data]").forEach((dataEl) => {
-            const rawData = evalExpression(
-                dataEl.getAttribute("data") || undefined,
-            );
+            const rawData = evalExpression(dataEl.getAttribute("data") || undefined);
 
             const renderBinds = () => {
                 const binds = dataEl.matches("[bind]")
@@ -23,10 +18,10 @@
                         const props = evalExpression(
                             bindEl.getAttribute("bind") || undefined,
                             proxyData,
-                            bindEl,
+                            bindEl
                         );
                         Object.entries(props).forEach(
-                            ([key, value]) => (bindEl[key] = value),
+                            async ([key, value]) => (bindEl[key] = await value)
                         );
                     });
             };
