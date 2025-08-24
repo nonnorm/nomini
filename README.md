@@ -98,7 +98,7 @@ Nomini has a couple of events that will automatically fire when certain conditio
 
 ```html
 <div nm-data nm-on="nmload: () => console.log('Initialized!')" nm-on="nmerror: (e) => alert(e.detail.err)">
-  <button nm-on="click: () => $get('/page')">Load Page</button>
+  <a href="/page" nm-on="click: (e) => { e.preventDefault(); $get(this.href); }">Load Page</button>
 </div>
 ```
 
