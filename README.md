@@ -6,7 +6,7 @@ Nomini is the smallest htmx/datastar replacement. Bind local state and make AJAX
 
 ### Data
 
-Add the `nm-data` attribute to any element to create a lightweight reactive scope. The syntax is exactly like a JavaScript object, but without the curly braces. It's not JSON, any JS code is allowed! Use the `this` keyword to refer to the current element. Data declared in this scope will be accessible as a global variable to any child `nm-bind` object that is **not** inside of another `nm-data`.
+Add the `nm-data` attribute to any element to create a lightweight reactive scope. The syntax is exactly like a JavaScript object, but without the curly braces. It's not JSON, any JS code is allowed! Use the `this` keyword to refer to the current element. Data declared in this scope will be accessible as a global variable to child `nm-bind` objects **unless** they are inside of another `nm-data`.
 
 ```html
 <div nm-data="name: 'Jeff'">
@@ -31,24 +31,12 @@ Instead of having a special syntax for computed properties, they're declared as 
 
 ### Bind
 
-Add the `nm-bind` attribute to an element to bind any property of that element. Some notable ones are `textContent`, `hidden`, `style`, `innerHTML`, and `className`. Note that while almost all HTML attributes have a JS property equivalent, you won't be able to bind to custom attributes. Consider using `data-` attributes instead, which are accessible through the `dataset` property. As with `nm-data`, you can use `this` to get the current element. Binds will be run once upon initialization, and any binds that read from a property of `nm-data` will be automatically re-run whenever their dependencies change. All binds **must** be a closure. Property accesses will only be tracked if they're in synchronous code (no `setTimeout` or `then`).
+Add the `nm-bind` attribute to an element to bind any property of that element. Some notable ones are `textContent`, `hidden`, `innerHTML`, and `ariaExpanded`. Note that while almost all HTML attributes have a JS property equivalent, you won't be able to bind to custom attributes. Consider using `data-` attributes instead, which are accessible through the `dataset` property. As with `nm-data`, you can use `this` to get the current element. Binds will be run once upon initialization, and any binds that read from a property of `nm-data` will be automatically re-run whenever their dependencies change. All binds **must** be a closure. Property accesses will only be tracked if they're in synchronous code (no `setTimeout` or `then`).
 
 
 ```html
 <div nm-data="name: 'Jeff'">
   <p nm-bind="textContent: () => name"><!-- Jeff --></p>
-</div>
-```
-
-#### Event Handlers
-
-To handle an event, simply bind to the `on*` event listener property. This closure, as expected, will be run whenever that event is triggered. Optionally, the closure can take the event as a property. Property accesses in event listeners will **not** be tracked.
-
-
-```html
-<div nm-data="counter: 0">
-  <p nm-bind="textContent: () => counter"></p>
-  <button nm-bind="onClick: () => counter += 1">Increment</button>
 </div>
 ```
 
@@ -65,17 +53,36 @@ To support async functions, any binds will be automatically awaited if required.
 </div>
 ```
 
-### Partial Page Swaps
-Nomini supports htmx-style partial page swaps. Helper functions are provided to make requests and swap them into the DOM. They have this syntax: `method(url, { parameters })`. Paramaters will be encoded using form-urlencoded syntax, and will automatically be inserted into the URL or the body depending on the method.
- 
-**Note**: Currently, only `get` and `post` helpers are implemented. I recognize the importance of the `PUT`, `PATCH`, and `DELETE` methods, and support for them will be added at a later time. Let me know if this is important to you, and I'll prioritize it!
+### Event Handlers
 
-Every fragment returned by the server is required to have an `id` to indicate where it should go in the page, and can optionally have an `nm-swap` to determine the swap strategy. The following swap strategies are available: `outerHTML` (default), `innerHTML`, `beforebegin`, `afterbegin`, `beforeend`, `afterend`.
+Instead of binding to `onclick` or using the onclick attribute, use `nm-on`: Optionally, the closure can take the event as a property. Property accesses in event listeners will **not** be tracked.
+
+
+```html
+<div nm-data="counter: 0">
+  <p nm-bind="textContent: () => counter"></p>
+  <button nm-on="click: () => counter += 1">Increment</button>
+</div>
+```
+
+### Class Bindings
+
+Use nm-class to conditionally toggle classes based on reactive data:
+```html
+<div nm-data="isActive: true">
+  <button nm-class="active: () => isActive">Click me</button>
+</div>
+```
+
+### Partial Page Swaps
+Nomini supports htmx-style partial page swaps. Use `$fetch` to request any HTTP method, or sugar functions `$get` and `$post`. Paramaters will be encoded using form-urlencoded syntax, and will automatically be inserted into the URL or the body depending on the method.
+
+Every fragment returned by the server is required to have an `id` to indicate where it should go in the page, and can optionally have an `nm-swap` attribute to determine the swap strategy. The following swap strategies are available: `outerHTML` (default), `innerHTML`, `beforebegin`, `afterbegin`, `beforeend`, `afterend`.
 
 ```html
 <div nm-data="text: ''">
-  <input nm-bind="oninput: () => text = this.value">
-  <button nm-bind="onclick: () => post('/submit', { text, code: 123 })">Submit</button>
+  <input nm-on="input: () => text = this.value">
+  <button nm-on="click: () => $post('/submit', { text, code: 123 })">Submit</button>
   <p id="output"></div>
 </div>
 
@@ -83,12 +90,23 @@ Every fragment returned by the server is required to have an `id` to indicate wh
 <p id="output">Lorem ipsum dolor sit amit</p>
 ```
 
-#### Magic Properties
-For convenience, Nomini includes some magic properties in each `nm-data` scope to watch the status of your request. The `nmFetching` attribute is a boolean that indicates whether a request is in progress. The `nmError` attribute returns either the last error or null. As with all other properties, these are reactive.
+### Magic Events
+Nomini has a couple of events that will automatically fire when certain conditions are met. The benefit of using events over signals is that events can bubble and escape their current scope, while signals cannot.
+
+- `nmerror`: Fires when a request fails either because of a network error or status code. The event bubbles outside the scope, making it easier to handle globally. Check the `detail` property for an `err` message and a `url`.
+- `nmload`: Fires when an element with nm-data is initialized.
+
+```html
+<div nm-data nm-on="nmload: () => console.log('Initialized!')" nm-on="nmerror: (e) => alert(e.detail.err)">
+  <button nm-on="click: () => $get('/page')">Load Page</button>
+</div>
+```
+
+### Magic Properties
+For convenience, Nomini includes some magic properties in each `nm-data` scope to watch the status of your request. The `nmFetching` attribute is a reactive boolean that indicates whether a request is in progress.
 ```html
 <div nm-data>
-  <p nm-bind="hidden: () => !nmError, textContent: () => nmError"></p>
-  <button nm-bind="onclick: () => get('/page')">Submit</button>
+  <button nm-bind="onclick: () => $get('/page')">Submit</button>
   <p nm-bind="hidden: () => nmFetching">Loading...</p>
 </div>
 ```

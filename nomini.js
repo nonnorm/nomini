@@ -3,32 +3,43 @@
 (() => {
     const helpers = {
         nmFetching: false,
-        nmError: null,
         nmInternal: {
             nmTimer: null
         },
-        get(url, data) {
+        $get(url, data) {
+            this.$fetch(url, "GET", data);
+        },
+        $post(url, data) {
+            this.$fetch(url, "POST", data);
+        },
+        $fetch(url, method, data) {
             this.nmFetching = true;
 
-            if (data)
-                url += (url.includes("?") ? "&" : "?") + new URLSearchParams(data);
+            let newUrl = url;
 
-            fetch(url, { headers: { "nm-request": true } })
-                .then(res => res.text())
+            const opts = { headers: { "nm-request": true }, method };
+
+            if (data) {
+                const encodedData = new URLSearchParams(data);
+
+                if (/GET|DELETE/.test(method))
+                    newUrl += (url.includes("?") ? "&" : "?") + encodedData;
+                else opts.body = encodedData;
+            }
+
+            fetch(url, opts)
+                .then(async res => {
+                    const text = await res.text();
+                    if (!res.ok) {
+                        throw new Error(`${res.statusText}: ${text}`)
+                    }
+                    return text;
+                })
                 .then(swap)
-                .catch(err => this.nmError = err)
+                .catch(err => dispatch(this.__el, "error", { err, url }))
                 .finally(() => this.nmFetching = false);
         },
-        post(url, data) {
-            this.nmFetching = true;
-
-            fetch(url, { headers: { "nm-request": true }, method: "POST", body: new URLSearchParams(data) })
-                .then(res => res.text())
-                .then(swap)
-                .catch(err => this.nmError = err)
-                .finally(() => this.nmFetching = false);
-        },
-        debounce(fn, ms) {
+        $debounce(fn, ms) {
             const internal = this.nmInternal;
 
             clearTimeout(internal.nmTimer);
@@ -37,6 +48,10 @@
     };
 
     let currentBind = null;
+
+    const dispatch = (el, name, detail, bubbles = true) => {
+        el.dispatchEvent(new CustomEvent(`nm${name}`, { detail, bubbles }))
+    };
 
     const swap = (text) => {
         const fragments = new DOMParser().parseFromString(text, "text/html").body.children;
@@ -53,14 +68,14 @@
                 target.insertAdjacentElement(strategy, fragment);
             else throw strategy;
 
-            fragment.dispatchEvent(new CustomEvent("nm:process", { bubbles: true }));
+            init(fragment);
         }
     };
 
     const evalExpression = (expression, data, thisArg) => {
         try {
             return new Function(
-                "nmData", `with(nmData) { return {${expression}} }`,
+                "__data", `with(__data) { return {${expression}} }`,
             ).call(thisArg, data);
         } catch (err) {
             console.error(err, expression);
@@ -72,6 +87,28 @@
         return el.matches(selector)
             ? [el, ...el.querySelectorAll(selector)]
             : [...el.querySelectorAll(selector)];
+    };
+
+    const processBindings = (baseEl, attr, handlerFn) => {
+        queryAttr(baseEl, `[${attr}]`).forEach(el => {
+            const proxyData = el.closest("[nm-data]")?.nmProxy || {};
+
+            const props = evalExpression(
+                el.getAttribute(attr),
+                proxyData,
+                el,
+            );
+
+            Object.entries(props).forEach(([key, val]) => handlerFn(el, key, val));
+
+            dispatch(el, "init", {}, false);
+        })
+    };
+
+    const runTracked = (fn) => {
+        currentBind = fn;
+        currentBind();
+        currentBind = null;
     }
 
     const init = (baseEl) => {
@@ -82,7 +119,8 @@
                     {},
                     dataEl,
                 ),
-                ...helpers
+                ...helpers,
+                __el: dataEl
             };
 
             const trackedDeps = Object.fromEntries(Object.keys(rawData).map(k => [k, new Set()]));
@@ -113,30 +151,23 @@
             dataEl.nmProxy = proxyData;
         });
 
-        queryAttr(baseEl, "[nm-bind]")
-            .forEach((bindEl) => {
-                const proxyData = bindEl.closest("[nm-data]")?.nmProxy || {};
-
-                const props = evalExpression(
-                    bindEl.getAttribute("nm-bind"),
-                    proxyData,
-                    bindEl,
-                );
-
-                Object.entries(props).forEach(([key, val]) => {
-                    if (key.startsWith("on")) {
-                        bindEl[key] = val;
-                    } else {
-                        currentBind = async () => {
-                            bindEl[key] = await val();
-                        };
-                        currentBind();
-                        currentBind = null;
-                    }
-                });
+        processBindings(baseEl, "nm-bind", (bindEl, key, val) => {
+            runTracked(async () => {
+                bindEl[key] = await val();
             });
+        });
+
+        processBindings(baseEl, "nm-on", (onEl, key, val) => {
+            onEl.addEventListener(key, val);
+        });
+
+        processBindings(baseEl, "nm-class", (classEl, key, val) => {
+            const classList = classEl.classList;
+            runTracked(() => {
+                val() ? classList.add(key) : classList.remove(key);
+            });
+        });
     };
 
     document.addEventListener("DOMContentLoaded", () => init(document.body));
-    document.addEventListener("nm:process", (e) => init(e.target));
 })();
