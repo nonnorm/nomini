@@ -15,17 +15,16 @@
         $fetch(url, method, data) {
             this.nmFetching = true;
 
-            let newUrl = url;
-
             const opts = { headers: { "nm-request": true }, method };
 
-            if (data) {
-                const encodedData = new URLSearchParams(data);
+            if (!data)
+                data = this.$userData();
 
-                if (/GET|DELETE/.test(method))
-                    newUrl += (url.includes("?") ? "&" : "?") + encodedData;
-                else opts.body = encodedData;
-            }
+            const encodedData = new URLSearchParams(data);
+
+            if (/GET|DELETE/.test(method))
+                url += (url.includes("?") ? "&" : "?") + encodedData;
+            else opts.body = encodedData;
 
             fetch(url, opts)
                 .then(async res => {
@@ -44,6 +43,9 @@
 
             clearTimeout(internal.nmTimer);
             internal.nmTimer = setTimeout(fn, ms);
+        },
+        $userData() {
+            return Object.fromEntries(Object.entries(this).filter(([k, _]) => !(k in helpers || k === "__el")));
         }
     };
 
@@ -75,7 +77,7 @@
     const evalExpression = (expression, data, thisArg) => {
         try {
             return new Function(
-                "__data", `with(__data) { return {${expression}} }`,
+                "__data", `with(__data) {return {${expression}}}`,
             ).call(thisArg, data);
         } catch (err) {
             console.error(err, expression);
@@ -89,9 +91,11 @@
             : [...el.querySelectorAll(selector)];
     };
 
+    const getClosestProxy = (el) => el.closest("[nm-data]")?.nmProxy || {};
+
     const processBindings = (baseEl, attr, handlerFn) => {
         queryAttr(baseEl, `[${attr}]`).forEach(el => {
-            const proxyData = el.closest("[nm-data]")?.nmProxy || {};
+            const proxyData = getClosestProxy(el);
 
             const props = evalExpression(
                 el.getAttribute(attr),
@@ -136,6 +140,9 @@
                 set(obj, prop, val) {
                     obj[prop] = val;
 
+                    if (!(prop in trackedDeps))
+                        trackedDeps[prop] = new Set();
+
                     // Required to prevent infinite loops (this took 3 hours to debug!)
                     let thisBind = currentBind;
                     currentBind = null;
@@ -151,6 +158,36 @@
             dataEl.nmProxy = proxyData;
         });
 
+        queryAttr(baseEl, "[nm-ref]").forEach(el => {
+            const proxyData = getClosestProxy(el);
+            const refName = el.getAttribute("nm-ref");
+
+            proxyData[refName] = el;
+        });
+
+        queryAttr(baseEl, "[nm-form]").forEach(el => {
+            const proxyData = getClosestProxy(el);
+
+            el.querySelectorAll("[name]").forEach(inputEl => {
+                const name = inputEl.name;
+
+                const setVal = () => {
+                    if (inputEl.type === "checkbox")
+                        proxyData[name] = inputEl.checked;
+                    else if (inputEl.type === "radio" && inputEl.checked)
+                        proxyData[name] = inputEl.value;
+                    else if (inputEl.type === "file")
+                        proxyData[name] = inputEl.files;
+                    else proxyData[name] = inputEl.value;
+                };
+
+                setVal();
+
+                inputEl.addEventListener("input", setVal);
+                inputEl.addEventListener("change", setVal);
+            })
+        });
+
         processBindings(baseEl, "nm-bind", (bindEl, key, val) => {
             runTracked(async () => {
                 bindEl[key] = await val();
@@ -158,7 +195,10 @@
         });
 
         processBindings(baseEl, "nm-on", (onEl, key, val) => {
-            onEl.addEventListener(key, val);
+            onEl.addEventListener(key, (e) => {
+                e.preventDefault();
+                val(e);
+            });
         });
 
         processBindings(baseEl, "nm-class", (classEl, key, val) => {

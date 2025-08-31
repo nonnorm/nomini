@@ -25,7 +25,7 @@ Instead of having a special syntax for computed properties, they're declared as 
   firstName: 'Jeff', lastName: 'Goldblum',
   fullName() { return `${this.firstName} ${this.lastName}` }
 ">
-  <p nm-bind="textContent: name"><!-- Jeff --></p>
+  <p nm-bind="textContent: fullName"></p>
 </div>
 ```
 
@@ -55,7 +55,7 @@ To support async functions, any binds will be automatically awaited if required.
 
 ### Event Handlers
 
-Instead of binding to `onclick` or using the onclick attribute, use `nm-on`: Optionally, the closure can take the event as a property. Property accesses in event listeners will **not** be tracked.
+Instead of binding to `onclick` or using the onclick attribute, use `nm-on`: `preventDefault` is called automatically. Optionally, the closure can take the event as a property. Property accesses in event listeners will **not** be tracked.
 
 
 ```html
@@ -67,15 +67,37 @@ Instead of binding to `onclick` or using the onclick attribute, use `nm-on`: Opt
 
 ### Class Bindings
 
-Use nm-class to conditionally toggle classes based on reactive data:
+Use `nm-class` to conditionally toggle classes based on reactive data:
 ```html
 <div nm-data="isActive: true">
   <button nm-class="active: () => isActive">Click me</button>
 </div>
 ```
 
+### Forms
+
+For convenience, the `nm-form` attribute will automatically add the value of any input elements with a name to the nearest reactive scope. It's a one-way reactive bind, so while new input by the user will be reflected, changes to the data will not be.
+
+```html
+<form nm-data nm-form>
+  <input name="username" placeholder="Username">
+  <input type="checkbox" name="agree">
+  <p nm-bind="textContent: () => `${username} ${agree ? 'did' : 'did not'} agree`"></p>
+</form>
+```
+
+### References
+
+Assign a DOM element to a reactive property using nm-ref:
+```html
+<div nm-data>
+  <dialog nm-ref="dialogRef">Hi :D</p>
+  <button nm-on="click: dialogRef.showModal">Open Dialog</button>
+</div>
+```
+
 ### Partial Page Swaps
-Nomini supports htmx-style partial page swaps. Use `$fetch` to request any HTTP method, or sugar functions `$get` and `$post`. Paramaters will be encoded using form-urlencoded syntax, and will automatically be inserted into the URL or the body depending on the method.
+Nomini supports htmx-style partial page swaps. Use `$fetch` to request any HTTP method, or sugar functions `$get` and `$post`. Paramaters will be encoded using form-urlencoded syntax, and will automatically be inserted into the URL or the body depending on the method. By default, all user-defined signals in the data scope are included in the request, but this can be overriden with the second parameter.
 
 Every fragment returned by the server is required to have an `id` to indicate where it should go in the page, and can optionally have an `nm-swap` attribute to determine the swap strategy. The following swap strategies are available: `outerHTML` (default), `innerHTML`, `beforebegin`, `afterbegin`, `beforeend`, `afterend`.
 
@@ -97,8 +119,8 @@ Nomini has a couple of events that will automatically fire when certain conditio
 - `nmload`: Fires when an element with nm-data is initialized.
 
 ```html
-<div nm-data nm-on="nmload: () => console.log('Initialized!')" nm-on="nmerror: (e) => alert(e.detail.err)">
-  <a href="/page" nm-on="click: (e) => { e.preventDefault(); $get(this.href); }">Load Page</button>
+<div nm-data nm-on="nmload: () => console.log('Initialized!'), nmerror: (e) => alert(e.detail.err)">
+  <a href="/page" nm-on="click: () => $get(this.href)">Load Page</button>
 </div>
 ```
 
