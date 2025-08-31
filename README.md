@@ -116,11 +116,11 @@ Every fragment returned by the server is required to have an `id` to indicate wh
 Nomini has a couple of events that will automatically fire when certain conditions are met. The benefit of using events over signals is that events can bubble and escape their current scope, while signals cannot.
 
 - `nmerror`: Fires when a request fails either because of a network error or status code. The event bubbles outside the scope, making it easier to handle globally. Check the `detail` property for an `err` message and a `url`.
-- `nmload`: Fires when an element with nm-data is initialized.
+- `nminit`: Fires when an element with nm-data is initialized.
 
 ```html
-<div nm-data nm-on="nmload: () => console.log('Initialized!'), nmerror: (e) => alert(e.detail.err)">
-  <a href="/page" nm-on="click: () => $get(this.href)">Load Page</button>
+<div nm-data nm-on="nminit: () => console.log('Initialized!'), nmerror: (e) => alert(e.detail.err)">
+  <a href="/page" nm-on="click: () => $get(this.href)">Load Page (progressively enhanced even if JS is disabled)</button>
 </div>
 ```
 
