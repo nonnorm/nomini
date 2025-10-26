@@ -17,10 +17,9 @@
 
             const opts = { headers: { "nm-request": true }, method };
 
-            if (!data)
-                data = this.$userData();
-
-            const encodedData = new URLSearchParams(data);
+            const p1 = new URLSearchParams(data);
+            const p2 = new URLSearchParams(this.$userData());
+            const encodedData = new URLSearchParams([...p1, ...p2]);
 
             if (/GET|DELETE/.test(method))
                 url += (url.includes("?") ? "&" : "?") + encodedData;
