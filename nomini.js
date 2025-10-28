@@ -45,7 +45,7 @@
 
             return Object.fromEntries(
                 Object.entries(this)
-                    .filter(([k]) => /^[a-z]*$/i.test(k))
+                    .filter(([k]) => /^[a-z]+$/i.test(k))
                     .map(([k, v]) => typeof v === "function" ? [k, v()] : [k, v])
                     .filter(([_, v]) => isPrimitive(v) || (Array.isArray(v) && v.every(isPrimitive)))
             );
@@ -191,7 +191,7 @@
             })
 
             el.querySelectorAll("button, input[type='submit']").forEach(submitEl => {
-                runTracked(() => submitEl.disabled = proxyData._nmFetching)
+                runTracked(() => submitEl.disabled = proxyData._nmFetching);
             })
         });
 

@@ -97,7 +97,7 @@ Assign a DOM element to a reactive property using nm-ref:
 ```
 
 ### Partial Page Swaps
-Nomini supports htmx-style partial page swaps. Use `$fetch` to request any HTTP method, or sugar functions `$get` and `$post`. Paramaters will be encoded using form-urlencoded syntax, and will automatically be inserted into the URL or the body depending on the method. By default, all user-defined signals in the data scope are included in the request, but this can be overriden with the second parameter.
+Nomini supports htmx-style partial page swaps. Use `$fetch` to request any HTTP method, or sugar functions `$get` and `$post`. Paramaters will be encoded using form-urlencoded syntax, and will automatically be inserted into the URL or the body depending on the method. In order of importance, explicitly passed parameters, `data-*` attributes, and all signals that start with a letter will be sent.
 
 Every fragment returned by the server is required to have an `id` to indicate where it should go in the page, and can optionally have an `nm-swap` attribute to determine the swap strategy. The following swap strategies are available: `outerHTML` (default), `innerHTML`, `beforebegin`, `afterbegin`, `beforeend`, `afterend`.
 
