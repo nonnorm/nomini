@@ -1,6 +1,10 @@
-"use strict";
+// Nomini v0.1.0
 // Inspired by aidenybai/dababy
+// Copyright (c) 2025 nonnorm
+// Licensed under the MIT License.
+
 (() => {
+    "use strict";
     const helpers = {
         _nmFetching: false,
         $get(url, data) {
