@@ -10,11 +10,13 @@
             this.$fetch(url, "POST", data);
         },
         $fetch(url, method, data) {
+            const el = currentEl;
+
             this._nmFetching = true;
 
             const opts = { headers: { "nm-request": true }, method };
 
-            data = { ...this.$userData(), ...this._el.dataset, ...data };
+            data = { ...this.$userData(), ...el.dataset, ...data };
 
             const encodedData = new URLSearchParams(data);
 
@@ -31,12 +33,12 @@
                     return text;
                 })
                 .then(swap)
-                .catch(err => dispatch(this._el, "error", { err, url }))
+                .catch(err => dispatch(el, "error", { err, url }))
                 .finally(() => this._nmFetching = false);
         },
         $debounce(fn, ms) {
-            clearTimeout(this._el.nmTimer);
-            this._el.nmTimer = setTimeout(fn, ms);
+            clearTimeout(currentEl.nmTimer);
+            currentEl.nmTimer = setTimeout(fn, ms);
         },
         $userData() {
             const isPrimitive = (x) => /string|number|boolean/.test(typeof x);
@@ -51,6 +53,7 @@
     };
 
     let currentBind = null;
+    let currentEl = null;
 
     const dispatch = (el, name, detail, bubbles = true) => {
         el.dispatchEvent(new CustomEvent(`nm${name}`, { detail, bubbles }))
@@ -124,8 +127,7 @@
                     {},
                     dataEl,
                 ),
-                ...helpers,
-                _el: dataEl
+                ...helpers
             };
 
             const trackedDeps = Object.fromEntries(Object.keys(rawData).map(k => [k, new Set()]));
@@ -202,7 +204,9 @@
         processBindings(baseEl, "nm-on", (onEl, key, val) => {
             onEl.addEventListener(key, (e) => {
                 e.preventDefault();
+                currentEl = onEl;
                 val(e);
+                currentEl = null;
             });
         });
 
