@@ -2,10 +2,7 @@
 // Inspired by aidenybai/dababy
 (() => {
     const helpers = {
-        nmFetching: false,
-        nmInternal: {
-            nmTimer: null
-        },
+        _nmFetching: false,
         $get(url, data) {
             this.$fetch(url, "GET", data);
         },
@@ -13,12 +10,13 @@
             this.$fetch(url, "POST", data);
         },
         $fetch(url, method, data) {
-            this.nmFetching = true;
+            const el = currentEl;
+
+            this._nmFetching = true;
 
             const opts = { headers: { "nm-request": true }, method };
 
-            if (!data)
-                data = this.$userData();
+            data = { ...this.$userData(), ...el.dataset, ...data };
 
             const encodedData = new URLSearchParams(data);
 
@@ -35,21 +33,27 @@
                     return text;
                 })
                 .then(swap)
-                .catch(err => dispatch(this.__el, "error", { err, url }))
-                .finally(() => this.nmFetching = false);
+                .catch(err => dispatch(el, "error", { err, url }))
+                .finally(() => this._nmFetching = false);
         },
         $debounce(fn, ms) {
-            const internal = this.nmInternal;
-
-            clearTimeout(internal.nmTimer);
-            internal.nmTimer = setTimeout(fn, ms);
+            clearTimeout(currentEl.nmTimer);
+            currentEl.nmTimer = setTimeout(fn, ms);
         },
         $userData() {
-            return Object.fromEntries(Object.entries(this).filter(([k, _]) => !(k in helpers || k === "__el")));
+            const isPrimitive = (x) => /string|number|boolean/.test(typeof x);
+
+            return Object.fromEntries(
+                Object.entries(this)
+                    .filter(([k]) => /^[a-z]+$/i.test(k))
+                    .map(([k, v]) => typeof v === "function" ? [k, v()] : [k, v])
+                    .filter(([_, v]) => isPrimitive(v) || (Array.isArray(v) && v.every(isPrimitive)))
+            );
         }
     };
 
     let currentBind = null;
+    let currentEl = null;
 
     const dispatch = (el, name, detail, bubbles = true) => {
         el.dispatchEvent(new CustomEvent(`nm${name}`, { detail, bubbles }))
@@ -123,8 +127,7 @@
                     {},
                     dataEl,
                 ),
-                ...helpers,
-                __el: dataEl
+                ...helpers
             };
 
             const trackedDeps = Object.fromEntries(Object.keys(rawData).map(k => [k, new Set()]));
@@ -186,6 +189,10 @@
                 inputEl.addEventListener("input", setVal);
                 inputEl.addEventListener("change", setVal);
             })
+
+            el.querySelectorAll("button, input[type='submit']").forEach(submitEl => {
+                runTracked(() => submitEl.disabled = proxyData._nmFetching);
+            })
         });
 
         processBindings(baseEl, "nm-bind", (bindEl, key, val) => {
@@ -197,7 +204,9 @@
         processBindings(baseEl, "nm-on", (onEl, key, val) => {
             onEl.addEventListener(key, (e) => {
                 e.preventDefault();
+                currentEl = onEl;
                 val(e);
+                currentEl = null;
             });
         });
 
