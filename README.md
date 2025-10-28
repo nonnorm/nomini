@@ -125,10 +125,10 @@ Nomini has a couple of events that will automatically fire when certain conditio
 ```
 
 ### Magic Properties
-For convenience, Nomini includes some magic properties in each `nm-data` scope to watch the status of your request. The `nmFetching` attribute is a reactive boolean that indicates whether a request is in progress.
+For convenience, Nomini includes some magic properties in each `nm-data` scope to watch the status of your request. The `_nmFetching` attribute is a reactive boolean that indicates whether a request is in progress.
 ```html
 <div nm-data>
   <button nm-bind="onclick: () => $get('/page')">Submit</button>
-  <p nm-bind="hidden: () => nmFetching">Loading...</p>
+  <p nm-bind="hidden: () => _nmFetching">Loading...</p>
 </div>
 ```
