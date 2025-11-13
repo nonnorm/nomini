@@ -1,5 +1,5 @@
 # The URL the site will be built for
-base_url = "https://nomini.js.org"
+base_url = "https://nonnorm.github.io/nomini"
 title = "Nomini"
 description = "Nomini is the smallest reactive and server-driven hypermedia framework"
 
