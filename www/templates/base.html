@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+		<link href="{{ get_url(path="/main.css") }}" rel="stylesheet">
+		<link href="https://indestructibletype.com/fonts/Jost.css" rel="stylesheet">
+
+		<script href="{{ get_url(path="/nomini.js") }}" defer></script>
+
+		{% set main_title = page.title | default(value=section.title) %}
+
+		<title>
+			{% if main_title %}
+				{{ main_title }}
+				–
+				{{ config.title }}
+			{% else %}
+				{{ config.title }}
+			{% endif %}
+		</title>
+	</head>
+
+	<body>
+		<header>
+			<img class="logo" src="{{ get_url(path="/logo.svg") }}" alt="Nomini logo, the word nomini in dark blue and yellow with a curve going over the middle i">
+			<nav>
+				<a href="/">Home</a>
+				|
+				<a href="https://github.com/nonnorm/nomini" target="_blank">GitHub</a>
+			</nav>
+		</header>
+		<main>
+			<h1>
+				{{ main_title }}
+			</h1>
+			{% block content %}{% endblock content %}
+		</main>
+	</body>
+
+</html>
