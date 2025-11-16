@@ -2,6 +2,7 @@
 
 *, *::before, *::after {
     box-sizing: border-box;
+    margin: 0;
 }
 
 :root {
@@ -17,7 +18,6 @@ body {
     line-height: 1.6;
     background-image: radial-gradient(circle, var(--nomini-blue) 1px, var(--gray-0) 0);
     background-size: 35px 35px;
-    margin: 0;
 }
 
 main, header, footer {
@@ -76,13 +76,22 @@ section {
     border: solid var(--blue-7) var(--border-size-2);
 
     >h1 {
-        font-size: var(--font-size-7);
+        font-size: var(--font-size-8);
     }
 
     >p {
         font-size: var(--font-size-4);
         color: var(--blue-10);
     }
+}
+
+.jingle {
+    position: absolute;
+    cursor: pointer;
+    top: 401px;
+    left: 83px;
+    border: none;
+    background: none;
 }
 
 p, ul, h2 {

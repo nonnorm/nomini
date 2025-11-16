@@ -23,7 +23,7 @@
 		</title>
 	</head>
 
-	<body>
+	<body nm-data>
 		<header>
 			<img class="logo" src="{{ get_url(path="/logo.svg") }}" alt="Nomini logo, the word nomini in dark blue and yellow with a curve going over the middle i">
 			<nav>
@@ -32,6 +32,8 @@
 				<a href="https://github.com/nonnorm/nomini" target="_blank">GitHub</a>
 			</nav>
 		</header>
+		<audio nm-ref="jingle" src="{{ get_url(path="/jingle.m4a") }}"></audio>
+		<button class="jingle" aria-hidden="true" nm-on="click: () => jingle.play()"></button>
 		<main>
 			{% if this.title %}
 				<h1>
