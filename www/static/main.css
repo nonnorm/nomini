@@ -20,8 +20,18 @@ body {
     background-size: 35px 35px;
 }
 
+main {
+    display: grid;
+    grid-template-columns: 1fr minmax(40ch, 8fr) 1fr;
+    gap: var(--size-4);
+
+    >* {
+        grid-column: 2;
+    }
+}
+
 main, header, footer {
-    padding-inline: clamp(var(--size-3), 6vw, 20%);
+    padding-inline: 6vw;
 }
 
 header {
@@ -32,6 +42,19 @@ header {
     justify-content: space-between;
     padding-block: var(--size-2);
     border-bottom: var(--border-size-3) solid var(--blue-9);
+}
+
+.toc {
+    background-color: var(--blue-0);
+    grid-column: 1;
+    padding: var(--size-2);
+    border-radius: var(--radius-1);
+    border: var(--border-size-2) var(--nomini-blue) dashed;
+
+    a {
+        color: var(--blue-10);
+        font-size: var(--font-size-2);
+    }
 }
 
 nav {
@@ -52,20 +75,25 @@ main {
     padding-block: var(--size-2);
 }
 
-img.logo {
+img {
     height: 100%;
+}
+
+section, article {
+    background-color: var(--gray-1);
+
+    padding: var(--size-4) var(--size-3);
+}
+
+article {
+    background-color: white;
+    border: var(--border-size-2) solid var(--gray-6);
 }
 
 section {
     border-left: solid var(--blue-7) var(--border-size-3);
     border-radius: var(--radius-2);
     background-color: var(--gray-1);
-
-    padding: var(--size-4) var(--size-3);
-    max-width: 70ch;
-
-    margin-bottom: var(--size-4);
-    margin-inline: auto;
 }
 
 .hero {
@@ -94,7 +122,7 @@ section {
     background: none;
 }
 
-p, ul, h2 {
+:is(section, article)>* {
     margin-bottom: var(--size-2);
 }
 

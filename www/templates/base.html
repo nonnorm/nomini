@@ -7,19 +7,14 @@
 
 		<link href="{{ get_url(path="/main.css") }}" rel="stylesheet">
 		<link href="https://indestructibletype.com/fonts/Jost.css" rel="stylesheet">
+		<link href="{{ get_url(path="/favicon.svg") }}" rel="icon">
 
 		<script src="{{ get_url(path="/nomini.js") }}" defer></script>
 
-		{% set this = page | default(value = section) %}
-
 		<title>
-			{% if this.title %}
-				{{ this.title }}
-				–
+			{% block title %}
 				{{ config.title }}
-			{% else %}
-				{{ config.title }}
-			{% endif %}
+			{% endblock %}
 		</title>
 	</head>
 
@@ -29,19 +24,17 @@
 			<nav>
 				<a href="/">Home</a>
 				|
+				<a href="/docs">Docs</a>
+				|
 				<a href="https://github.com/nonnorm/nomini" target="_blank">GitHub</a>
 			</nav>
 		</header>
 		<audio nm-ref="jingle" src="{{ get_url(path="/jingle.m4a") }}"></audio>
 		<button class="jingle" aria-hidden="true" nm-on="click: () => jingle.play()"></button>
 		<main>
-			{% if this.title %}
-				<h1>
-					{{ this.title }}
-				</h1>
-			{% endif %}
-
-			{{ this.content | safe }}
+			{% block content %}
+				{{ section.content | safe }}
+			{% endblock %}
 		</main>
 	</body>
 

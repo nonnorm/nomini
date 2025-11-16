@@ -23,7 +23,6 @@ ___(With these three attributes, you can build almost anything! Still, there are
 - `nm-class`: Like `nm-bind`, but for classes.
 - `nm-ref`: Hold a reference to an element in your data scope.
 - `nm-form`: Automatically wire an entire form's inputs to reactive variables.
-- `nm-use`: Clone a template from the page and link it into the current data scope.
 
 </section>
 
@@ -36,7 +35,7 @@ That means you never have to worry about dependency updates, you can add new fea
 
 If you prefer a CDN, just paste this line of code into your `<head>`.
 ```html
-<script src="https://cdn.jsdelivr.net/gh/nonnorm/nomini@0.1.0/nomini.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/gh/nonnorm/nomini@0.1.0/nomini.min.js"></script>
 ```
 
 </section>
