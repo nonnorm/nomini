@@ -8,13 +8,13 @@
 		<link href="{{ get_url(path="/main.css") }}" rel="stylesheet">
 		<link href="https://indestructibletype.com/fonts/Jost.css" rel="stylesheet">
 
-		<script href="{{ get_url(path="/nomini.js") }}" defer></script>
+		<script src="{{ get_url(path="/nomini.js") }}" defer></script>
 
-		{% set main_title = page.title | default(value=section.title) %}
+		{% set this = page | default(value = section) %}
 
 		<title>
-			{% if main_title %}
-				{{ main_title }}
+			{% if this.title %}
+				{{ this.title }}
 				–
 				{{ config.title }}
 			{% else %}
@@ -33,10 +33,13 @@
 			</nav>
 		</header>
 		<main>
-			<h1>
-				{{ main_title }}
-			</h1>
-			{% block content %}{% endblock content %}
+			{% if this.title %}
+				<h1>
+					{{ this.title }}
+				</h1>
+			{% endif %}
+
+			{{ this.content | safe }}
 		</main>
 	</body>
 

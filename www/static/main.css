@@ -1,14 +1,12 @@
 @import url("https://cdn.jsdelivr.net/npm/open-props@1.7.16/open-props.min.css");
 
 *, *::before, *::after {
-    padding: 0;
-    margin: 0;
     box-sizing: border-box;
 }
 
 :root {
-    --nomini-blue: #142770;
-    --nomini-yellow: #f6dc6a;
+    --nomini-blue: #112D85;
+    --nomini-yellow: #f9dc70;
     --accent-color: var(--nomini-blue);
     --highlight-color: var(--nomini-yellow);
     --inline-padding: 20%;
@@ -19,20 +17,21 @@ body {
     line-height: 1.6;
     background-image: radial-gradient(circle, var(--nomini-blue) 1px, var(--gray-0) 0);
     background-size: 35px 35px;
+    margin: 0;
 }
 
-body>* {
+main, header, footer {
     padding-inline: clamp(var(--size-3), 6vw, 20%);
 }
 
 header {
     height: var(--size-8);
-    background-color: var(--blue-9);
+    background-color: var(--blue-6);
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding-block: var(--size-2);
-    border-bottom: 2px solid var(--blue-11);
+    border-bottom: var(--border-size-3) solid var(--blue-9);
 }
 
 nav {
@@ -80,7 +79,7 @@ section {
         font-size: var(--font-size-7);
     }
 
-    >.subtitle {
+    >p {
         font-size: var(--font-size-4);
         color: var(--blue-10);
     }

@@ -1,7 +1,16 @@
 +++
+template = "base.html"
 +++
 
-{% section() %}
+<section class="hero">
+
+# Nomini
+_The tiny, reactive, server-driven framework_
+
+</section>
+
+<section>
+
 ## Uhh... what is Nomini?
 Nomini is _not_  your average JavaScript framework. Honestly, it’s barely a framework at all—and that’s the point. Nomini is just a tiny (~2kb) collection of useful attributes and helper functions that allow you to embrace writing JavaScript like the good old days, with a few modern conveniences layered on top.
 ### Features:
@@ -15,9 +24,11 @@ ___(With these three attributes, you can build almost anything! Still, there are
 - `nm-ref`: Hold a reference to an element in your data scope.
 - `nm-form`: Automatically wire an entire form's inputs to reactive variables.
 - `nm-use`: Clone a template from the page and link it into the current data scope.
-{% end %}
 
-{% section() %}
+</section>
+
+<section>
+
 ## Installation
 __Nomini is a single file__ designed to be downloaded and vendored into your project (placed into a static directory).
 
@@ -27,4 +38,5 @@ If you prefer a CDN, just paste this line of code into your `<head>`.
 ```html
 <script src="https://cdn.jsdelivr.net/gh/nonnorm/nomini@0.1.0/nomini.min.js"></script>
 ```
-{% end %}
+
+</section>

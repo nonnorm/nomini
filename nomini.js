@@ -137,17 +137,6 @@
     }
 
     const init = (baseEl) => {
-        queryAttr(baseEl, "[nm-use]").forEach((useEl) => {
-            const template = document.getElementById(useEl.getAttribute("nm-use"));
-            if (template) {
-                const content = useEl.innerHTML;
-                useEl.innerHTML = template.innerHTML;
-
-                const slot = useEl.querySelector("slot:not([name])");
-                if (slot) slot.outerHTML = content;
-            }
-        });
-
         queryAttr(baseEl, "[nm-data]").forEach((dataEl) => {
             const rawData = {
                 ...evalExpression(
