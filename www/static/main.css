@@ -22,13 +22,19 @@ body {
 
 main {
     display: grid;
-    grid-template-columns: 1fr minmax(40ch, 8fr) 1fr;
+    grid-template-columns: minmax(30ch, 1fr);
     gap: var(--size-4);
 
-    >* {
-        grid-column: 2;
+    @media (min-width: 600px) {
+        grid-template-columns: minmax(max-content, 1fr) minmax(30ch, 6fr) 1fr;
+
+        >* {
+            grid-column: 2;
+        }
     }
 }
+
+
 
 main, header, footer {
     padding-inline: 6vw;

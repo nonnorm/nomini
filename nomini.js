@@ -108,7 +108,7 @@
     };
 
     const queryAttr = (el, selector) => {
-        let elMatch = el.matches(selector) ? [el] : [];
+        const elMatch = el.matches(selector) ? [el] : [];
         return [...elMatch, ...el.querySelectorAll(selector)];
     };
 
@@ -151,9 +151,8 @@
 
             const proxyData = new Proxy(rawData, {
                 get(obj, prop) {
-                    if (prop in trackedDeps && currentBind) {
+                    if (prop in trackedDeps && currentBind)
                         trackedDeps[prop].add(currentBind);
-                    }
 
                     return obj[prop];
                 },
@@ -164,7 +163,7 @@
                         trackedDeps[prop] = new Set();
 
                     // Required to prevent infinite loops (this took 3 hours to debug!)
-                    let thisBind = currentBind;
+                    const thisBind = currentBind;
                     currentBind = null;
 
                     trackedDeps[prop].forEach(fn => fn());
@@ -188,7 +187,7 @@
         queryAttr(baseEl, "[nm-form]").forEach(el => {
             const proxyData = getClosestProxy(el);
 
-            el.querySelectorAll("[name]").forEach(inputEl => {
+            queryAttr(el, "[name]").forEach(inputEl => {
                 const name = inputEl.name;
 
                 const setVal = () => {
@@ -198,6 +197,8 @@
                         proxyData[name] = inputEl.value;
                     else if (inputEl.type === "file")
                         proxyData[name] = inputEl.files;
+                    else if (/number|range/.test(inputEl.type))
+                        proxyData[name] = +inputEl.value;
                     else proxyData[name] = inputEl.value;
                 };
 
@@ -205,11 +206,12 @@
 
                 inputEl.addEventListener("input", setVal);
                 inputEl.addEventListener("change", setVal);
-            })
+            });
 
-            el.querySelectorAll("button, input[type='submit']").forEach(submitEl => {
+
+            queryAttr(el, "button, input[type='submit']").forEach(submitEl => {
                 runTracked(() => submitEl.disabled = proxyData._nmFetching);
-            })
+            });
         });
 
         processBindings(baseEl, "nm-bind", (bindEl, key, val) => {
