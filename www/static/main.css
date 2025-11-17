@@ -23,7 +23,7 @@ body {
 main {
     display: grid;
     grid-template-columns: minmax(30ch, 1fr);
-    gap: var(--size-4);
+    gap: var(--size-5);
 
     @media (min-width: 600px) {
         grid-template-columns: minmax(max-content, 1fr) minmax(30ch, 6fr) 1fr;
@@ -56,6 +56,12 @@ header {
     padding: var(--size-2);
     border-radius: var(--radius-1);
     border: var(--border-size-2) var(--nomini-blue) dashed;
+    height: max-content;
+
+    @media (min-width: 600px) {
+        position: sticky;
+        top: var(--size-1);
+    }
 
     a {
         color: var(--blue-10);
@@ -126,10 +132,6 @@ section {
     left: 83px;
     border: none;
     background: none;
-}
-
-:is(section, article)>* {
-    margin-bottom: var(--size-2);
 }
 
 ul {
