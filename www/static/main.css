@@ -48,6 +48,7 @@ header {
     justify-content: space-between;
     padding-block: var(--size-2);
     border-bottom: var(--border-size-3) solid var(--blue-9);
+    position: static;
 }
 
 .toc {
@@ -95,6 +96,10 @@ section, article {
     background-color: var(--gray-1);
 
     padding: var(--size-4) var(--size-3);
+
+    >*+* {
+        margin-bottom: var(--size-1);
+    }
 }
 
 article {
@@ -141,5 +146,5 @@ ul {
 pre {
     padding: var(--size-2);
     border-radius: var(--radius-2);
-    overflow: scroll;
+    overflow: auto;
 }

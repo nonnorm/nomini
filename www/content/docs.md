@@ -44,8 +44,8 @@ WIP
 ### $fetch/$get/$post
 WIP
 
-### $debounce
-WIP (may be removed after inline event modifiers)
+### $dataset
+WIP
 
 ---
 
@@ -60,4 +60,7 @@ WIP
 
 ## Magic Properties
 ### _nmFetching
+WIP
+
+### _nmAbort
 WIP

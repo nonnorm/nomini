@@ -7,6 +7,8 @@
     "use strict";
     const helpers = {
         _nmFetching: false,
+        _nmAbort: null,
+        $refs: {},
         $get(url, data) {
             this.$fetch(url, "GET", data);
         },
@@ -16,9 +18,11 @@
         $fetch(url, method, data) {
             const el = currentEl;
 
+            if (this._nmAbort) this._nmAbort.abort();
+            this._nmAbort = new AbortController();
             this._nmFetching = true;
 
-            const opts = { headers: { "nm-request": true }, method };
+            const opts = { headers: { "nm-request": true }, method, signal: this._nmAbort.signal };
 
             data = { ...this.$nmData(), ...this.$dataset(), ...data };
 
@@ -30,19 +34,20 @@
 
             fetch(url, opts)
                 .then(async res => {
-                    const text = await res.text();
                     if (!res.ok) {
-                        throw new Error(`${res.statusText}: ${text}`)
+                        const errorText = await res.text();
+                        throw new Error(`${res.statusText}: ${errorText}`)
                     }
-                    return text;
+
+                    const decoder = new TextDecoder();
+
+                    for await (const chunk of res.body) {
+                        const buf = decoder.decode(chunk, { stream: true });
+                        swap(buf);
+                    }
                 })
-                .then(swap)
                 .catch(err => dispatch(el, "error", { err, url }))
                 .finally(() => this._nmFetching = false);
-        },
-        $debounce(fn, ms) {
-            clearTimeout(currentEl.nmTimer);
-            currentEl.nmTimer = setTimeout(fn, ms);
         },
         $nmData() {
             const isPrimitive = (x) => /string|number|boolean/.test(typeof x);
@@ -112,7 +117,7 @@
         return [...elMatch, ...el.querySelectorAll(selector)];
     };
 
-    const getClosestProxy = (el) => el.closest("[nm-data]")?.nmProxy || {};
+    const getClosestProxy = (el) => el.closest("[nm-data]")?.nmProxy || { ...helpers };
 
     const processBindings = (baseEl, attr, handlerFn) => {
         queryAttr(baseEl, `[${attr}]`).forEach(el => {
@@ -137,6 +142,16 @@
     }
 
     const init = (baseEl) => {
+        queryAttr(baseEl, "[nm-use]").forEach((useEl) => {
+            const template = document.getElementById(useEl.getAttribute("nm-use"));
+            if (template) {
+                const content = useEl.innerHTML;
+                useEl.innerHTML = template.innerHTML;
+                const slot = useEl.querySelector("slot:not([name])");
+                if (slot) slot.outerHTML = content;
+            }
+        });
+
         queryAttr(baseEl, "[nm-data]").forEach((dataEl) => {
             const rawData = {
                 ...evalExpression(
@@ -181,7 +196,7 @@
             const proxyData = getClosestProxy(el);
             const refName = el.getAttribute("nm-ref");
 
-            proxyData[refName] = el;
+            proxyData.$refs[refName] = el;
         });
 
         queryAttr(baseEl, "[nm-form]").forEach(el => {
@@ -215,18 +230,38 @@
         });
 
         processBindings(baseEl, "nm-bind", (bindEl, key, val) => {
+            currentEl = bindEl;
             runTracked(async () => {
                 bindEl[key] = await val();
             });
+            currentEl = null;
         });
 
         processBindings(baseEl, "nm-on", (onEl, key, val) => {
-            onEl.addEventListener(key, (e) => {
-                e.preventDefault();
+            const [eventName, ...mods] = key.split(".");
+
+            const wrappedFn = () => {
                 currentEl = onEl;
                 val(e);
                 currentEl = null;
-            });
+            }
+
+            const debounceMod = mods.find((val) => val.startsWith("debounce"));
+            const delay = +(debounceMod?.substring(7));
+
+            const listener = (e) => {
+                if (mods.includes("prevent")) e.preventDefault();
+                if (mods.includes("stop")) e.stopPropagation();
+
+                if (delay) {
+                    clearTimeout(onEl.nmTimer);
+                    onEl.nmTimer = setTimeout(wrappedFn, delay);
+                } else wrappedFn();
+
+                if (mods.includes("once")) onEl.removeEventListener(eventName, listener);
+            };
+
+            onEl.addEventListener(eventName, listener);
         });
 
         processBindings(baseEl, "nm-class", (classEl, key, val) => {

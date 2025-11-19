@@ -23,6 +23,7 @@ ___(With these three attributes, you can build almost anything! Still, there are
 - `nm-class`: Like `nm-bind`, but for classes.
 - `nm-ref`: Hold a reference to an element in your data scope.
 - `nm-form`: Automatically wire an entire form's inputs to reactive variables.
+- `nm-use`: A tiny templating system that takes advantage of `nm-data` scopes.
 
 </section>
 
