@@ -36,7 +36,7 @@ That means you never have to worry about dependency updates, you can add new fea
 
 If you prefer a CDN, just paste this line of code into your `<head>`.
 ```html
-<script defer src="https://cdn.jsdelivr.net/gh/nonnorm/nomini@0.1.0/nomini.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/gh/nonnorm/nomini@0.2.0/nomini.min.js"></script>
 ```
 
 </section>
