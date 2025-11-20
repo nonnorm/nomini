@@ -16,9 +16,6 @@
 :root {
     --nomini-blue: #112d85;
     --nomini-yellow: #f9dc70;
-    --accent-color: var(--nomini-blue);
-    --highlight-color: var(--nomini-yellow);
-    --inline-padding: 20%;
 }
 
 body {
@@ -30,6 +27,7 @@ body {
 
 main {
     padding-block: var(--size-2);
+    padding-inline: 6vw;
 
     display: grid;
     grid-template-columns: minmax(30ch, 1fr);
@@ -42,12 +40,6 @@ main {
             grid-column: 2;
         }
     }
-}
-
-
-
-body>* {
-    padding-inline: 6vw;
 }
 
 header {

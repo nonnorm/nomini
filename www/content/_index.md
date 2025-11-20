@@ -40,3 +40,14 @@ If you prefer a CDN, just paste this line of code into your `<head>`.
 ```
 
 </section>
+
+<section>
+
+## Credits
+This project would not have existed without the inspiration of many other projects made by many talented developers. Thank you to:
+1. [Carson Gross](https://github.com/1cg) for his work on [htmx](https://github.com/bigskysoftware/htmx) v4, by which the multipurpose fetch helper was inspired, and [fixi](https://github.com/bigskysoftware/fixi), which was a benchmark for this library's minimalism.
+2. [Katrina Scialdone](https://github.com/kgscialdone) for their work on [Ajaxial](https://github.com/kgscialdone/ajaxial)—a spiritual precursor to fixi—and [Facet](https://github.com/kgscialdone/facet), which provided inspiration for the `nm-use` templating system.
+3. [Delaney Gillilan](https://github.com/delaneyj) for his work on [datastar](https://github.com/starfederation/datastar), which was a useful feature benchmark and inspiration for some of the helper functions.
+4. [Aiden Bai](https://github.com/aidenybai) for his work on [dababy](https://github.com/aidenybai/dababy), from which this project was directly forked for its innovative idea of JS property binding.
+
+</section>
