@@ -102,6 +102,10 @@
     };
 
     const evalExpression = (expression, data, thisArg) => {
+        if (expression.startsWith("{") && expression.endsWith("}")) {
+            expression = expression.slice(1, -1);
+        }
+
         try {
             return new Function(
                 "__data", `with(__data) {return {${expression}}}`,
@@ -240,16 +244,16 @@
         processBindings(baseEl, "nm-on", (onEl, key, val) => {
             const [eventName, ...mods] = key.split(".");
 
-            const wrappedFn = () => {
-                currentEl = onEl;
-                val(e);
-                currentEl = null;
-            }
-
             const debounceMod = mods.find((val) => val.startsWith("debounce"));
-            const delay = +(debounceMod?.substring(7));
+            const delay = +(debounceMod?.slice(8));
 
             const listener = (e) => {
+                const wrappedFn = () => {
+                    currentEl = onEl;
+                    val(e);
+                    currentEl = null;
+                }
+
                 if (mods.includes("prevent")) e.preventDefault();
                 if (mods.includes("stop")) e.stopPropagation();
 

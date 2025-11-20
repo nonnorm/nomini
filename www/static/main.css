@@ -1,12 +1,20 @@
 @import url("https://cdn.jsdelivr.net/npm/open-props@1.7.16/open-props.min.css");
 
+@font-face {
+    font-family: 'Jost';
+    src: url('Jost-Regular.woff2') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
 *, *::before, *::after {
     box-sizing: border-box;
     margin: 0;
 }
 
 :root {
-    --nomini-blue: #112D85;
+    --nomini-blue: #112d85;
     --nomini-yellow: #f9dc70;
     --accent-color: var(--nomini-blue);
     --highlight-color: var(--nomini-yellow);
@@ -14,13 +22,15 @@
 }
 
 body {
-    font-family: Jost;
+    font-family: Jost, sans-serif;
     line-height: 1.6;
     background-image: radial-gradient(circle, var(--nomini-blue) 1px, var(--gray-0) 0);
     background-size: 35px 35px;
 }
 
 main {
+    padding-block: var(--size-2);
+
     display: grid;
     grid-template-columns: minmax(30ch, 1fr);
     gap: var(--size-5);
@@ -36,7 +46,7 @@ main {
 
 
 
-main, header, footer {
+body>* {
     padding-inline: 6vw;
 }
 
@@ -45,10 +55,10 @@ header {
     background-color: var(--blue-6);
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: space-evenly;
+    gap: var(--size-3);
     padding-block: var(--size-2);
     border-bottom: var(--border-size-3) solid var(--blue-9);
-    position: static;
 }
 
 .toc {
@@ -84,10 +94,6 @@ nav {
     }
 }
 
-main {
-    padding-block: var(--size-2);
-}
-
 img {
     height: 100%;
 }
@@ -97,8 +103,12 @@ section, article {
 
     padding: var(--size-4) var(--size-3);
 
-    >*+* {
-        margin-bottom: var(--size-1);
+    >pre+:not(:is(h2, h3, h4)) {
+        margin-top: var(--size-2);
+    }
+
+    >:not(:is(h1, h2, h3, h4))+* {
+        margin-top: var(--size-3);
     }
 }
 
@@ -139,12 +149,39 @@ section {
     background: none;
 }
 
-ul {
-    padding-left: var(--size-4);
-}
-
 pre {
     padding: var(--size-2);
     border-radius: var(--radius-2);
     overflow: auto;
+}
+
+.demo-red {
+    color: var(--red-6);
+}
+
+dialog {
+    margin: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    border: solid var(--border-size-2) var(--gray-5);
+
+    thead th {
+        position: sticky;
+        top: 0;
+        background-color: white;
+        background-clip: padding-box;
+    }
+
+    th, td {
+        border-inline: solid var(--border-size-2) var(--gray-5);
+        text-align: center;
+        padding: var(--size-1);
+    }
+
+    tbody tr:nth-child(odd) {
+        background-color: var(--gray-2);
+    }
 }

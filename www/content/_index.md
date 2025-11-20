@@ -5,14 +5,14 @@ template = "base.html"
 <section class="hero">
 
 # Nomini
-_The tiny, reactive, server-driven framework_
+*The tiny, reactive, server-driven framework*
 
 </section>
 
 <section>
 
 ## Uhh... what is Nomini?
-Nomini is _not_  your average JavaScript framework. Honestly, it’s barely a framework at all—and that’s the point. Nomini is just a tiny (~2kb) collection of useful attributes and helper functions that allow you to embrace writing JavaScript like the good old days, with a few modern conveniences layered on top.
+Nomini is *not*  your average JavaScript framework. Honestly, it’s barely a framework at all—and that’s the point. Nomini is just a tiny (~2kb) collection of useful attributes and helper functions that allow you to embrace writing JavaScript like the good old days, with a few modern conveniences layered on top.
 ### Features:
 - `nm-data`: The heart of Nomini. Create a reactive data scope, similar to Alpine's `x-data`.
 - `nm-bind`: Take any property of any element and bind it to a reactive variable.
@@ -30,7 +30,7 @@ ___(With these three attributes, you can build almost anything! Still, there are
 <section>
 
 ## Installation
-__Nomini is a single file__ designed to be downloaded and vendored into your project (placed into a static directory).
+**Nomini is a single file** designed to be downloaded and vendored into your project (placed into a static directory).
 
 That means you never have to worry about dependency updates, you can add new features as you please, or you can remove filthy code that you don't use.
 

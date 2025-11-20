@@ -5,11 +5,10 @@
 		<meta http-equiv="content-type" content="text/html; charset=utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-		<link href="{{ get_url(path="/main.css") }}" rel="stylesheet">
-		<link href="https://indestructibletype.com/fonts/Jost.css" rel="stylesheet">
-		<link href="{{ get_url(path="/favicon.svg") }}" rel="icon">
+		<link href="/main.css" rel="stylesheet">
+		<link href="/favicon.svg" rel="icon">
 
-		<script src="{{ get_url(path="/nomini.js") }}" defer></script>
+		<script src="/nomini.js" defer></script>
 
 		<title>
 			{% block title %}
@@ -20,17 +19,19 @@
 
 	<body nm-data>
 		<header>
-			<img class="logo" src="{{ get_url(path="/logo.svg") }}" alt="Nomini logo, the word nomini in dark blue and yellow with a curve going over the middle i">
+			<img class="logo" src="/logo.svg" alt="Nomini logo, the word nomini in dark blue and yellow with a curve going over the middle i">
 			<nav>
 				<a href="/">Home</a>
 				|
 				<a href="/docs">Docs</a>
 				|
+				<a href="/comparison">Comparisons</a>
+				|
 				<a href="https://github.com/nonnorm/nomini" target="_blank">GitHub</a>
 			</nav>
 		</header>
-		<audio nm-ref="jingle" src="{{ get_url(path="/jingle.m4a") }}"></audio>
-		<button class="jingle" aria-hidden="true" nm-on="click: () => jingle.play()"></button>
+		<audio nm-ref="jingle" src="/jingle.m4a" "></audio>
+		<button class="jingle" aria-hidden="true" nm-on="click: () => $refs.jingle.play()"></button>
 		<main>
 			{% block content %}
 				{{ section.content | safe }}
