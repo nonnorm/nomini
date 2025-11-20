@@ -33,7 +33,7 @@ main {
     grid-template-columns: minmax(30ch, 1fr);
     gap: var(--size-5);
 
-    @media (min-width: 600px) {
+    @media (min-width: 800px) {
         grid-template-columns: minmax(max-content, 1fr) minmax(30ch, 6fr) 1fr;
 
         >* {
@@ -61,7 +61,7 @@ header {
     border: var(--border-size-2) var(--nomini-blue) dashed;
     height: max-content;
 
-    @media (min-width: 600px) {
+    @media (min-width: 800px) {
         position: sticky;
         top: var(--size-1);
     }
@@ -153,6 +153,10 @@ pre {
 
 dialog {
     margin: auto;
+}
+
+.table-wrapper {
+    overflow: auto;
 }
 
 table {
