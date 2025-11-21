@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+		<link href="/main.css" rel="stylesheet">
+		<link href="/favicon.svg" rel="icon">
+
+		<script src="/nomini.js" defer></script>
+
+		<meta name="description" content="Nomini is a tiny (~2kb) layer on top of HTML that gives you access to reactive variables and partial page swaps directly in your markup.">
+
+		<title>
+	Comparison — Nomini
+</title>
+	</head>
+
+	<body nm-data>
+		<header>
+			<img class="logo" src="/logo.svg" alt="Nomini logo, the word nomini in dark blue and yellow with a curve going over the middle i">
+			<nav>
+				<a href="/">Home</a>
+				|
+				<a href="/docs">Docs</a>
+				|
+				<a href="/comparison">Comparisons</a>
+				|
+				<a href="https://github.com/nonnorm/nomini" target="_blank">GitHub</a>
+			</nav>
+		</header>
+		<audio preload="none" nm-ref="jingle" src="/jingle.m4a"></audio>
+		<button class="jingle" aria-hidden="true" nm-on="click: () => $refs.jingle.play()"></button>
+		<main>
+			
+	
+
+	<article>
+		<h1>
+			Comparison
+		</h1>
+
+		<div class="table-wrapper">
+<table><thead><tr><th></th><th>Nomini</th><th>HTMX v4</th><th>Alpine</th><th>Datastar</th></tr></thead><tbody>
+<tr><td><strong>Bundle Size (.min.gz)</strong></td><td>🟢 ~1.8kb</td><td>🟡 ~11.2kb</td><td>🟡 ~15.3kb</td><td>🟡 ~14.4kb</td></tr>
+<tr><td><strong>Main Purpose</strong></td><td>Lightweight reactivity and partial page updates</td><td>Easy partial page updates</td><td>Full-featured reactivity system</td><td>Full-featured streaming page updates and reactivity</td></tr>
+<tr><td><strong>Reactivity Model</strong></td><td>Proxy</td><td>🔴 N/A</td><td>Proxy</td><td>Signals</td></tr>
+<tr><td><strong>Data Scoping</strong></td><td>🟡 <code>nm-data</code>, no inheritance</td><td>🔴 N/A</td><td>🟢 Global scope with overrides</td><td>🟢 Global scope with overrides</td></tr>
+<tr><td><strong>Event Handling</strong></td><td>🟢 <code>nm-on</code> with modifiers</td><td>🟢 <code>hx-on</code>/<code>hx-trigger</code> with many modifiers</td><td>🟢 <code>x-on</code> with modifiers</td><td>🟢 <code>data-on</code> with modifiers</td></tr>
+<tr><td><strong>Templating</strong></td><td>🟡 <code>template</code> + <code>nm-use</code> (simple)</td><td>🔴 None</td><td>🟢 <code>x-for</code>/<code>x-teleport</code></td><td>🟡 Rocket (pro only)</td></tr>
+<tr><td><strong>Morphing</strong></td><td>🔴 None</td><td>🟡 Simple id-based (Idiomorph WIP)</td><td>🔴 Only with <code>alpine-morph</code></td><td>🟢 Idiomorph built-in</td></tr>
+<tr><td><strong>AJAX</strong></td><td>🟢 <code>$fetch</code></td><td>🟢 <code>hx-get</code></td><td>🔴 Only with <code>alpine-ajax</code></td><td>🟢 <code>@get</code></td></tr>
+<tr><td><strong>Streaming Support</strong></td><td>🟢 By HTML Chunk</td><td>🟢 By HTML Chunk or SSE</td><td>🔴 N/A</td><td>🟢 By custom SSE format</td></tr>
+<tr><td><strong>Server Requirements</strong></td><td>🟢 Produce HTML</td><td>🟢 Produce HTML</td><td>🟡 Produce HTML and JSON</td><td>🟡 Produce custom SSE format (or HTML)</td></tr>
+<tr><td><strong>Learning Curve</strong></td><td>🟢 Low</td><td>🟢 Very Low</td><td>🟡 Medium</td><td>🟡 Medium–High</td></tr>
+<tr><td><strong>Locality of Behavior</strong></td><td>🟢 Excellent</td><td>🟢 Excellent</td><td>🟢 Excellent</td><td>🟢 Excellent</td></tr>
+<tr><td><strong>CSP Compatability</strong></td><td>🔴 None</td><td>🟢 Good</td><td>🟡 Possible</td><td>🔴 None</td></tr>
+</tbody></table>
+</div>
+
+	</article>
+
+		</main>
+	</body>
+
+</html>
