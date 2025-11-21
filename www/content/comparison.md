@@ -11,7 +11,7 @@ title = "Comparison"
 | **Data Scoping** | 🟡 `nm-data`, no inheritance | 🔴 N/A | 🟢 Global scope with overrides | 🟢 Global scope with overrides |
 | **Event Handling** | 🟢 `nm-on` with modifiers | 🟢 `hx-on`/`hx-trigger` with many modifiers | 🟢 `x-on` with modifiers | 🟢 `data-on` with modifiers |
 | **Templating** | 🟡 `template` + `nm-use` (simple) | 🔴 None | 🟢 `x-for`/`x-teleport` | 🟡 Rocket (pro only) |
-| **Morphing** | 🔴 None | 🟡 Simple id-based | 🔴 Only with `alpine-morph` | 🟢 Idiomorph built-in |
+| **Morphing** | 🔴 None | 🟡 Simple id-based (Idiomorph WIP) | 🔴 Only with `alpine-morph` | 🟢 Idiomorph built-in |
 | **AJAX** | 🟢 `$fetch` | 🟢 `hx-get` | 🔴 Only with `alpine-ajax` | 🟢 `@get` |
 | **Streaming Support** | 🟢 By HTML Chunk | 🟢 By HTML Chunk or SSE | 🔴 N/A | 🟢 By custom SSE format |
 | **Server Requirements** | 🟢 Produce HTML | 🟢 Produce HTML | 🟡 Produce HTML and JSON | 🟡 Produce custom SSE format (or HTML) |
