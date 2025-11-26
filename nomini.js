@@ -4,7 +4,6 @@
 // Licensed under the MIT License.
 
 (() => {
-    "use strict";
     const helpers = {
         _nmFetching: false,
         _nmAbort: null,
@@ -88,7 +87,7 @@
             const target = document.getElementById(fragment.id);
 
             if (strategy === "innerHTML") {
-                fragment.id = null;
+                fragment.id = undefined;
                 target.replaceChildren(fragment);
             }
             else if (strategy === "outerHTML")
@@ -102,7 +101,7 @@
     };
 
     const evalExpression = (expression, data, thisArg) => {
-        if (expression.startsWith("{") && expression.endsWith("}")) {
+        if (/^{.*}$/s.test(expression)) {
             expression = expression.slice(1, -1);
         }
 
@@ -118,7 +117,10 @@
 
     const queryAttr = (el, selector) => {
         const elMatch = el.matches(selector) ? [el] : [];
-        return [...elMatch, ...el.querySelectorAll(selector)];
+        return [
+            ...elMatch,
+            ...el.querySelectorAll(selector)
+        ].filter((val) => !val.closest("[nm-ignore]"));
     };
 
     const getClosestProxy = (el) => el.closest("[nm-data]")?.nmProxy || { ...helpers };
@@ -234,45 +236,45 @@
         });
 
         processBindings(baseEl, "nm-bind", (bindEl, key, val) => {
-            currentEl = bindEl;
-            runTracked(async () => {
-                bindEl[key] = await val();
-            });
-            currentEl = null;
-        });
+            if (key.startsWith("on")) {
+                const [eventName, ...mods] = key.slice(2).split(".");
 
-        processBindings(baseEl, "nm-on", (onEl, key, val) => {
-            const [eventName, ...mods] = key.split(".");
+                const debounceMod = mods.find((val) => val.startsWith("debounce"));
+                const delay = +(debounceMod?.slice(8));
 
-            const debounceMod = mods.find((val) => val.startsWith("debounce"));
-            const delay = +(debounceMod?.slice(8));
+                const listener = (e) => {
+                    const wrappedFn = () => {
+                        currentEl = bindEl;
+                        val(e);
+                        currentEl = null;
+                    }
 
-            const listener = (e) => {
-                const wrappedFn = () => {
-                    currentEl = onEl;
-                    val(e);
-                    currentEl = null;
-                }
+                    if (mods.includes("prevent")) e.preventDefault();
+                    if (mods.includes("stop")) e.stopPropagation();
 
-                if (mods.includes("prevent")) e.preventDefault();
-                if (mods.includes("stop")) e.stopPropagation();
+                    if (delay) {
+                        clearTimeout(bindEl.nmTimer);
+                        bindEl.nmTimer = setTimeout(wrappedFn, delay);
+                    } else wrappedFn();
+                };
 
-                if (delay) {
-                    clearTimeout(onEl.nmTimer);
-                    onEl.nmTimer = setTimeout(wrappedFn, delay);
-                } else wrappedFn();
+                bindEl.addEventListener(eventName, listener, { once: mods.includes("once") });
+            } else {
+                currentEl = bindEl;
+                runTracked(async () => {
+                    const resolvedVal = await val();
+                    const [main, sub] = key.split(".");
 
-                if (mods.includes("once")) onEl.removeEventListener(eventName, listener);
-            };
-
-            onEl.addEventListener(eventName, listener);
-        });
-
-        processBindings(baseEl, "nm-class", (classEl, key, val) => {
-            const classList = classEl.classList;
-            runTracked(() => {
-                val() ? classList.add(key) : classList.remove(key);
-            });
+                    if (sub) {
+                        if (main === "class")
+                            bindEl.classList.toggle(sub, resolvedVal);
+                        else
+                            bindEl[main][sub] = resolvedVal;
+                    } else
+                        bindEl[main] = resolvedVal;
+                });
+                currentEl = null;
+            }
         });
     };
 
