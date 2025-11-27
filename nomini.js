@@ -4,6 +4,7 @@
 // Licensed under the MIT License.
 
 (() => {
+    "use strict";
     const helpers = {
         _nmFetching: false,
         _nmAbort: null,
@@ -87,7 +88,7 @@
             const target = document.getElementById(fragment.id);
 
             if (strategy === "innerHTML") {
-                fragment.id = undefined;
+                fragment.id = null;
                 target.replaceChildren(fragment);
             }
             else if (strategy === "outerHTML")
@@ -101,7 +102,7 @@
     };
 
     const evalExpression = (expression, data, thisArg) => {
-        if (/^{.*}$/s.test(expression)) {
+        if (expression.startsWith("{") && expression.endsWith("}")) {
             expression = expression.slice(1, -1);
         }
 
@@ -117,10 +118,7 @@
 
     const queryAttr = (el, selector) => {
         const elMatch = el.matches(selector) ? [el] : [];
-        return [
-            ...elMatch,
-            ...el.querySelectorAll(selector)
-        ].filter((val) => !val.closest("[nm-ignore]"));
+        return [...elMatch, ...el.querySelectorAll(selector)];
     };
 
     const getClosestProxy = (el) => el.closest("[nm-data]")?.nmProxy || { ...helpers };
@@ -236,45 +234,45 @@
         });
 
         processBindings(baseEl, "nm-bind", (bindEl, key, val) => {
-            if (key.startsWith("on")) {
-                const [eventName, ...mods] = key.slice(2).split(".");
+            currentEl = bindEl;
+            runTracked(async () => {
+                bindEl[key] = await val();
+            });
+            currentEl = null;
+        });
 
-                const debounceMod = mods.find((val) => val.startsWith("debounce"));
-                const delay = +(debounceMod?.slice(8));
+        processBindings(baseEl, "nm-on", (onEl, key, val) => {
+            const [eventName, ...mods] = key.split(".");
 
-                const listener = (e) => {
-                    const wrappedFn = () => {
-                        currentEl = bindEl;
-                        val(e);
-                        currentEl = null;
-                    }
+            const debounceMod = mods.find((val) => val.startsWith("debounce"));
+            const delay = +(debounceMod?.slice(8));
 
-                    if (mods.includes("prevent")) e.preventDefault();
-                    if (mods.includes("stop")) e.stopPropagation();
+            const listener = (e) => {
+                const wrappedFn = () => {
+                    currentEl = onEl;
+                    val(e);
+                    currentEl = null;
+                }
 
-                    if (delay) {
-                        clearTimeout(bindEl.nmTimer);
-                        bindEl.nmTimer = setTimeout(wrappedFn, delay);
-                    } else wrappedFn();
-                };
+                if (mods.includes("prevent")) e.preventDefault();
+                if (mods.includes("stop")) e.stopPropagation();
 
-                bindEl.addEventListener(eventName, listener, { once: mods.includes("once") });
-            } else {
-                currentEl = bindEl;
-                runTracked(async () => {
-                    const resolvedVal = await val();
-                    const [main, sub] = key.split(".");
+                if (delay) {
+                    clearTimeout(onEl.nmTimer);
+                    onEl.nmTimer = setTimeout(wrappedFn, delay);
+                } else wrappedFn();
 
-                    if (sub) {
-                        if (main === "class")
-                            bindEl.classList.toggle(sub, resolvedVal);
-                        else
-                            bindEl[main][sub] = resolvedVal;
-                    } else
-                        bindEl[main] = resolvedVal;
-                });
-                currentEl = null;
-            }
+                if (mods.includes("once")) onEl.removeEventListener(eventName, listener);
+            };
+
+            onEl.addEventListener(eventName, listener);
+        });
+
+        processBindings(baseEl, "nm-class", (classEl, key, val) => {
+            const classList = classEl.classList;
+            runTracked(() => {
+                val() ? classList.add(key) : classList.remove(key);
+            });
         });
     };
 
