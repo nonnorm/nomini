@@ -293,7 +293,6 @@
                 if (!(val in proxyData)) val = val.bind(bindEl);
 
                 if (key.startsWith("on")) {
-                    // --- BEGIN events
                     const [eventName, ...mods] = key.slice(2).split(".");
 
                     const debounceMod = mods.find((val) => val.startsWith("debounce"));
@@ -316,7 +315,6 @@
                     };
 
                     bindEl.addEventListener(eventName, listener, { once: mods.includes("once") });
-                    // --- END events
                 } else {
                     currentEl = bindEl;
                     runTracked(async () => {
@@ -333,10 +331,10 @@
                     currentEl = null;
                 }
             });
+
+            dispatch(el, "init", {}, false);
         });
         // --- END bind
-
-        dispatch(el, "init", {}, false);
     };
 
     document.addEventListener("DOMContentLoaded", () => init(document.body));
