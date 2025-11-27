@@ -1,13 +1,16 @@
-// Nomini v0.2.0
+// Nomini v0.3.0
 // Inspired by aidenybai/dababy
 // Copyright (c) 2025 nonnorm
 // Licensed under the MIT License.
 
 (() => {
     const helpers = {
+        // --- BEGIN ref
+        $refs: {},
+        // --- END ref
+        // --- BEGIN fetch
         _nmFetching: false,
         _nmAbort: null,
-        $refs: {},
         $get(url, data) {
             this.$fetch(url, "GET", data);
         },
@@ -58,6 +61,7 @@
                     .filter(([_, v]) => isPrimitive(v) || (Array.isArray(v) && v.every(isPrimitive)))
             );
         },
+        // --- END fetch
         $dataset() {
             let datasets = {};
             let el = currentEl;
@@ -69,7 +73,8 @@
             }
 
             return datasets;
-        }
+        },
+        $watch: runTracked,
     };
 
     let currentBind = null;
@@ -79,26 +84,70 @@
         el.dispatchEvent(new CustomEvent(`nm${name}`, { detail, bubbles }))
     };
 
+    // --- BEGIN fetch
     const swap = (text) => {
         const fragments = new DOMParser().parseFromString(text, "text/html").body.children;
 
-        for (const fragment of fragments) {
+        for (let fragment of fragments) {
+            if (!fragment.id) {
+                console.warn(`[Nomini] Fragment is missing an id: ${fragment}`);
+                continue;
+            }
+
             const strategy = fragment.getAttribute("nm-swap") || "outerHTML";
             const target = document.getElementById(fragment.id);
 
-            if (strategy === "innerHTML") {
-                fragment.id = undefined;
-                target.replaceChildren(fragment);
+            if (!target) {
+                console.warn(`[Nomini] Swap target with id "${fragment.id}" not found`);
+                continue;
             }
-            else if (strategy === "outerHTML")
+
+            // --- BEGIN morph
+            cssMorph(fragment);
+            // --- END morph
+
+            if (strategy === "innerHTML") {
+                target.replaceChildren(...fragment.childNodes);
+                // Re-initialize the correct thing
+                fragment = target;
+            } else if (strategy === "outerHTML")
                 target.replaceWith(fragment);
             else if (/(before|after)(begin|end)/.test(strategy))
                 target.insertAdjacentElement(strategy, fragment);
-            else throw strategy;
+            else {
+                console.error(`[Nomini] Invalid swap strategy "${strategy}"`);
+                continue;
+            }
 
             init(fragment);
         }
     };
+    // --- END fetch
+
+    // --- BEGIN morph
+    const cssMorph = (fragment) => {
+        const attributesToSettle = ["style", "class", "height", "width"];
+
+        const idSet = queryAttr(fragment, "[id]");
+
+        idSet.forEach((newEl) => {
+            const oldEl = document.getElementById(newEl.id);
+
+            if (oldEl && oldEl.tagName === newEl.tagName) {
+                const newElCopy = newEl.cloneNode();
+
+                const morph = (src) => attributesToSettle.forEach((attr) => {
+                    const attrVal = src.getAttribute(attr);
+                    if (attrVal) newEl.setAttribute(attr, attrVal);
+                    else newEl.removeAttribute(attr);
+                });
+
+                morph(oldEl)
+                requestAnimationFrame(() => morph(newElCopy));
+            }
+        });
+    };
+    // --- END morph
 
     const evalExpression = (expression, data, thisArg) => {
         if (/^{.*}$/s.test(expression)) {
@@ -110,7 +159,7 @@
                 "__data", `with(__data) {return {${expression}}}`,
             ).call(thisArg, data);
         } catch (err) {
-            console.error(err, expression);
+            console.error("[Nomini] failed to parse obj:", expression, "\n", err);
             return {};
         }
     };
@@ -125,22 +174,6 @@
 
     const getClosestProxy = (el) => el.closest("[nm-data]")?.nmProxy || { ...helpers };
 
-    const processBindings = (baseEl, attr, handlerFn) => {
-        queryAttr(baseEl, `[${attr}]`).forEach(el => {
-            const proxyData = getClosestProxy(el);
-
-            const props = evalExpression(
-                el.getAttribute(attr),
-                proxyData,
-                el,
-            );
-
-            Object.entries(props).forEach(([key, val]) => handlerFn(el, key, val));
-
-            dispatch(el, "init", {}, false);
-        })
-    };
-
     const runTracked = (fn) => {
         currentBind = fn;
         currentBind();
@@ -148,16 +181,20 @@
     }
 
     const init = (baseEl) => {
+        // --- BEGIN template
         queryAttr(baseEl, "[nm-use]").forEach((useEl) => {
-            const template = document.getElementById(useEl.getAttribute("nm-use"));
+            const id = useEl.getAttribute("nm-use");
+            const template = document.getElementById(id);
             if (template) {
-                const content = useEl.innerHTML;
-                useEl.innerHTML = template.innerHTML;
-                const slot = useEl.querySelector("slot:not([name])");
-                if (slot) slot.outerHTML = content;
-            }
+                const templateFrag = template.content.cloneNode(true)
+                const slot = templateFrag.querySelector("slot:not([name])");
+                if (slot) slot.replaceWith(...useEl.childNodes);
+                useEl.replaceChildren(templateFrag);
+            } else console.error(`[Nomini] no template with id "${id}"`)
         });
+        // --- END template
 
+        // --- BEGIN data
         queryAttr(baseEl, "[nm-data]").forEach((dataEl) => {
             const rawData = {
                 ...evalExpression(
@@ -197,30 +234,36 @@
 
             dataEl.nmProxy = proxyData;
         });
+        // --- END data
 
+        // --- BEGIN ref
         queryAttr(baseEl, "[nm-ref]").forEach(el => {
             const proxyData = getClosestProxy(el);
             const refName = el.getAttribute("nm-ref");
 
             proxyData.$refs[refName] = el;
         });
+        // --- END ref
 
+        // --- BEGIN form
         queryAttr(baseEl, "[nm-form]").forEach(el => {
             const proxyData = getClosestProxy(el);
 
             queryAttr(el, "[name]").forEach(inputEl => {
-                const name = inputEl.name;
-
                 const setVal = () => {
+                    let res;
+
                     if (inputEl.type === "checkbox")
-                        proxyData[name] = inputEl.checked;
+                        res = inputEl.checked;
                     else if (inputEl.type === "radio" && inputEl.checked)
-                        proxyData[name] = inputEl.value;
+                        res = inputEl.value;
                     else if (inputEl.type === "file")
-                        proxyData[name] = inputEl.files;
+                        res = inputEl.files;
                     else if (/number|range/.test(inputEl.type))
-                        proxyData[name] = +inputEl.value;
-                    else proxyData[name] = inputEl.value;
+                        res = +inputEl.value;
+                    else res = inputEl.value;
+
+                    proxyData[inputEl.name] = res;
                 };
 
                 setVal();
@@ -234,48 +277,66 @@
                 runTracked(() => submitEl.disabled = proxyData._nmFetching);
             });
         });
+        // --- END form
 
-        processBindings(baseEl, "nm-bind", (bindEl, key, val) => {
-            if (key.startsWith("on")) {
-                const [eventName, ...mods] = key.slice(2).split(".");
+        // --- BEGIN bind
+        queryAttr(baseEl, "nm-bind").forEach(bindEl => {
+            const proxyData = getClosestProxy(bindEl);
 
-                const debounceMod = mods.find((val) => val.startsWith("debounce"));
-                const delay = +(debounceMod?.slice(8));
+            const props = evalExpression(
+                el.getAttribute(attr),
+                proxyData,
+                el,
+            );
 
-                const listener = (e) => {
-                    const wrappedFn = () => {
-                        currentEl = bindEl;
-                        val(e);
-                        currentEl = null;
-                    }
+            Object.entries(props).forEach(([key, val]) => {
+                if (!(val in proxyData)) val = val.bind(bindEl);
 
-                    if (mods.includes("prevent")) e.preventDefault();
-                    if (mods.includes("stop")) e.stopPropagation();
+                if (key.startsWith("on")) {
+                    // --- BEGIN events
+                    const [eventName, ...mods] = key.slice(2).split(".");
 
-                    if (delay) {
-                        clearTimeout(bindEl.nmTimer);
-                        bindEl.nmTimer = setTimeout(wrappedFn, delay);
-                    } else wrappedFn();
-                };
+                    const debounceMod = mods.find((val) => val.startsWith("debounce"));
+                    const delay = +(debounceMod?.slice(8));
 
-                bindEl.addEventListener(eventName, listener, { once: mods.includes("once") });
-            } else {
-                currentEl = bindEl;
-                runTracked(async () => {
-                    const resolvedVal = await val();
-                    const [main, sub] = key.split(".");
+                    const listener = (e) => {
+                        const wrappedFn = () => {
+                            currentEl = bindEl;
+                            val(e);
+                            currentEl = null;
+                        }
 
-                    if (sub) {
-                        if (main === "class")
-                            bindEl.classList.toggle(sub, resolvedVal);
-                        else
-                            bindEl[main][sub] = resolvedVal;
-                    } else
-                        bindEl[main] = resolvedVal;
-                });
-                currentEl = null;
-            }
+                        if (mods.includes("prevent")) e.preventDefault();
+                        if (mods.includes("stop")) e.stopPropagation();
+
+                        if (delay) {
+                            clearTimeout(bindEl.nmTimer);
+                            bindEl.nmTimer = setTimeout(wrappedFn, delay);
+                        } else wrappedFn();
+                    };
+
+                    bindEl.addEventListener(eventName, listener, { once: mods.includes("once") });
+                    // --- END events
+                } else {
+                    currentEl = bindEl;
+                    runTracked(async () => {
+                        const resolvedVal = await val();
+                        const [main, sub] = key.split(".");
+
+                        if (sub) {
+                            if (main === "class")
+                                bindEl.classList.toggle(sub, resolvedVal);
+                            else
+                                bindEl[main][sub] = resolvedVal;
+                        } else bindEl[main] = resolvedVal;
+                    });
+                    currentEl = null;
+                }
+            });
         });
+        // --- END bind
+
+        dispatch(el, "init", {}, false);
     };
 
     document.addEventListener("DOMContentLoaded", () => init(document.body));
