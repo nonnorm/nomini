@@ -4,6 +4,49 @@
 // Licensed under the MIT License.
 
 (() => {
+    // Utility functions
+    const dispatch = (el, name, opts) => {
+        opts = { bubbles: true, detail: {}, ...opts };
+        el.dispatchEvent(new CustomEvent(`nm${name}`, opts));
+    };
+
+    const evalExpression = (expression, data, thisArg) => {
+        if (/^{.*}$/s.test(expression)) {
+            expression = expression.slice(1, -1);
+        }
+
+        try {
+            return new Function(
+                "__data",
+                `with(__data) {return {${expression}}}`,
+            ).call(thisArg, data);
+        } catch (err) {
+            console.error("[Nomini] failed to parse obj:", expression, "\n", err);
+            return {};
+        }
+    };
+
+    const queryAttr = (el, selector) => {
+        const elMatch = el.matches(selector) ? [el] : [];
+        return [...elMatch, ...el.querySelectorAll(selector)].filter(
+            (val) => !val.closest("[nm-ignore]"),
+        );
+    };
+
+    const getClosestProxy = (el) =>
+        el.closest("[nm-data]")?.nmProxy || { ...helpers };
+
+    const runTracked = (fn) => {
+        currentBind = fn;
+        currentBind();
+        currentBind = null;
+    };
+
+    // Important reactivity stuff
+    let currentBind = null;
+    let currentEl = null;
+
+    // Helpers that are included with every data object
     const helpers = {
         // --- BEGIN ref
         $refs: {},
@@ -24,7 +67,11 @@
             this._nmAbort = new AbortController();
             this._nmFetching = true;
 
-            const opts = { headers: { "nm-request": true }, method, signal: this._nmAbort.signal };
+            const opts = {
+                headers: { "nm-request": true },
+                method,
+                signal: this._nmAbort.signal,
+            };
 
             data = { ...this.$nmData(), ...this.$dataset(), ...data };
 
@@ -35,10 +82,10 @@
             else opts.body = encodedData;
 
             fetch(url, opts)
-                .then(async res => {
+                .then(async (res) => {
                     if (!res.ok) {
                         const errorText = await res.text();
-                        throw new Error(`${res.statusText}: ${errorText}`)
+                        throw new Error(`${res.statusText}: ${errorText}`);
                     }
 
                     const decoder = new TextDecoder();
@@ -48,18 +95,19 @@
                         swap(buf);
                     }
                 })
-                .catch(err => dispatch(el, "error", { err, url }))
+                .catch((err) => dispatch(el, "error", { detail: { err, url } }))
                 .finally(() => this._nmFetching = false);
         },
         $nmData() {
             const isPrimitive = (x) => /string|number|boolean/.test(typeof x);
 
-            return Object.fromEntries(
-                Object.entries(this)
-                    .filter(([k]) => /^[a-z]+$/i.test(k))
-                    .map(([k, v]) => typeof v === "function" ? [k, v()] : [k, v])
-                    .filter(([_, v]) => isPrimitive(v) || (Array.isArray(v) && v.every(isPrimitive)))
-            );
+            return Object.entries(this).reduce((acc, [k, v]) => {
+                if (!/^[a-z]+$/i.test(k)) return acc;
+                if (typeof v === "function") v = v();
+                if (isPrimitive(v) || (Array.isArray(v) && v.every(isPrimitive)))
+                    acc[k] = v;
+                return acc;
+            }, {});
         },
         // --- END fetch
         $dataset() {
@@ -67,7 +115,7 @@
             let el = currentEl;
 
             while (el) {
-                datasets = { ...datasets, ...el.dataset }
+                datasets = { ...datasets, ...el.dataset };
                 if (el.hasAttribute("nm-data")) break;
                 el = el.parentElement;
             }
@@ -75,20 +123,17 @@
             return datasets;
         },
         $watch: runTracked,
-    };
-
-    let currentBind = null;
-    let currentEl = null;
-
-    const dispatch = (el, name, detail, bubbles = true) => {
-        el.dispatchEvent(new CustomEvent(`nm${name}`, { detail, bubbles }))
+        $dispatch(evt, detail) {
+            currentEl.dispatchEvent(new CustomEvent(evt, { detail }))
+        }
     };
 
     // --- BEGIN fetch
     const swap = (text) => {
-        const fragments = new DOMParser().parseFromString(text, "text/html").body.children;
+        const fragments = new DOMParser().parseFromString(text, "text/html").body
+            .children;
 
-        for (let fragment of fragments) {
+        for (const fragment of fragments) {
             if (!fragment.id) {
                 console.warn(`[Nomini] Fragment is missing an id: ${fragment}`);
                 continue;
@@ -102,24 +147,25 @@
                 continue;
             }
 
+            dispatch(target, "destroy")
+
             // --- BEGIN morph
             cssMorph(fragment);
             // --- END morph
 
-            if (strategy === "innerHTML") {
+            if (strategy === "inner") {
                 target.replaceChildren(...fragment.childNodes);
-                // Re-initialize the correct thing
-                fragment = target;
-            } else if (strategy === "outerHTML")
+                init(target)
+            } else if (strategy === "outer") {
                 target.replaceWith(fragment);
-            else if (/(before|after)(begin|end)/.test(strategy))
-                target.insertAdjacentElement(strategy, fragment);
-            else {
-                console.error(`[Nomini] Invalid swap strategy "${strategy}"`);
-                continue;
+                init(fragment)
             }
-
-            init(fragment);
+            else if (/before|after|prepend|append/.test(strategy)) {
+                const kids = [...fragment.childNodes];
+                target[strategy](...kids);
+                kids.forEach((n) => n.nodeType === 1 && init(n));
+            }
+            else console.error(`[Nomini] Invalid swap strategy "${strategy}"`);
         }
     };
     // --- END fetch
@@ -136,49 +182,19 @@
             if (oldEl && oldEl.tagName === newEl.tagName) {
                 const newElCopy = newEl.cloneNode();
 
-                const morph = (src) => attributesToSettle.forEach((attr) => {
-                    const attrVal = src.getAttribute(attr);
-                    if (attrVal) newEl.setAttribute(attr, attrVal);
-                    else newEl.removeAttribute(attr);
-                });
+                const morph = (src) =>
+                    attributesToSettle.forEach((attr) => {
+                        const attrVal = src.getAttribute(attr);
+                        if (attrVal) newEl.setAttribute(attr, attrVal);
+                        else newEl.removeAttribute(attr);
+                    });
 
-                morph(oldEl)
+                morph(oldEl);
                 requestAnimationFrame(() => morph(newElCopy));
             }
         });
     };
     // --- END morph
-
-    const evalExpression = (expression, data, thisArg) => {
-        if (/^{.*}$/s.test(expression)) {
-            expression = expression.slice(1, -1);
-        }
-
-        try {
-            return new Function(
-                "__data", `with(__data) {return {${expression}}}`,
-            ).call(thisArg, data);
-        } catch (err) {
-            console.error("[Nomini] failed to parse obj:", expression, "\n", err);
-            return {};
-        }
-    };
-
-    const queryAttr = (el, selector) => {
-        const elMatch = el.matches(selector) ? [el] : [];
-        return [
-            ...elMatch,
-            ...el.querySelectorAll(selector)
-        ].filter((val) => !val.closest("[nm-ignore]"));
-    };
-
-    const getClosestProxy = (el) => el.closest("[nm-data]")?.nmProxy || { ...helpers };
-
-    const runTracked = (fn) => {
-        currentBind = fn;
-        currentBind();
-        currentBind = null;
-    }
 
     const init = (baseEl) => {
         // --- BEGIN template
@@ -186,26 +202,24 @@
             const id = useEl.getAttribute("nm-use");
             const template = document.getElementById(id);
             if (template) {
-                const templateFrag = template.content.cloneNode(true)
+                const templateFrag = template.content.cloneNode(true);
                 const slot = templateFrag.querySelector("slot:not([name])");
                 if (slot) slot.replaceWith(...useEl.childNodes);
                 useEl.replaceChildren(templateFrag);
-            } else console.error(`[Nomini] no template with id "${id}"`)
+            } else console.error(`[Nomini] no template with id "${id}"`);
         });
         // --- END template
 
         // --- BEGIN data
         queryAttr(baseEl, "[nm-data]").forEach((dataEl) => {
             const rawData = {
-                ...evalExpression(
-                    dataEl.getAttribute("nm-data"),
-                    {},
-                    dataEl,
-                ),
-                ...helpers
+                ...evalExpression(dataEl.getAttribute("nm-data"), {}, dataEl),
+                ...helpers,
             };
 
-            const trackedDeps = Object.fromEntries(Object.keys(rawData).map(k => [k, new Set()]));
+            const trackedDeps = Object.fromEntries(
+                Object.keys(rawData).map((k) => [k, new Set()]),
+            );
 
             const proxyData = new Proxy(rawData, {
                 get(obj, prop) {
@@ -217,14 +231,13 @@
                 set(obj, prop, val) {
                     obj[prop] = val;
 
-                    if (!(prop in trackedDeps))
-                        trackedDeps[prop] = new Set();
+                    if (!(prop in trackedDeps)) trackedDeps[prop] = new Set();
 
                     // Required to prevent infinite loops (this took 3 hours to debug!)
                     const thisBind = currentBind;
                     currentBind = null;
 
-                    trackedDeps[prop].forEach(fn => fn());
+                    trackedDeps[prop].forEach((fn) => fn());
 
                     currentBind = thisBind;
 
@@ -237,7 +250,7 @@
         // --- END data
 
         // --- BEGIN ref
-        queryAttr(baseEl, "[nm-ref]").forEach(el => {
+        queryAttr(baseEl, "[nm-ref]").forEach((el) => {
             const proxyData = getClosestProxy(el);
             const refName = el.getAttribute("nm-ref");
 
@@ -246,10 +259,10 @@
         // --- END ref
 
         // --- BEGIN form
-        queryAttr(baseEl, "[nm-form]").forEach(el => {
+        queryAttr(baseEl, "[nm-form]").forEach((el) => {
             const proxyData = getClosestProxy(el);
 
-            queryAttr(el, "[name]").forEach(inputEl => {
+            queryAttr(el, "[name]").forEach((inputEl) => {
                 const setVal = () => {
                     let res;
 
@@ -272,38 +285,31 @@
                 inputEl.addEventListener("change", setVal);
             });
 
-
-            queryAttr(el, "button, input[type='submit']").forEach(submitEl => {
+            queryAttr(el, "button, input[type='submit']").forEach((submitEl) => {
                 runTracked(() => submitEl.disabled = proxyData._nmFetching);
             });
         });
         // --- END form
 
         // --- BEGIN bind
-        queryAttr(baseEl, "nm-bind").forEach(bindEl => {
+        queryAttr(baseEl, "[nm-bind]").forEach((bindEl) => {
             const proxyData = getClosestProxy(bindEl);
 
-            const props = evalExpression(
-                el.getAttribute(attr),
-                proxyData,
-                el,
-            );
+            const props = evalExpression(bindEl.getAttribute("nm-bind"), proxyData, bindEl);
 
             Object.entries(props).forEach(([key, val]) => {
-                if (!(val in proxyData)) val = val.bind(bindEl);
-
                 if (key.startsWith("on")) {
                     const [eventName, ...mods] = key.slice(2).split(".");
 
                     const debounceMod = mods.find((val) => val.startsWith("debounce"));
-                    const delay = +(debounceMod?.slice(8));
+                    const delay = +debounceMod?.slice(8);
 
                     const listener = (e) => {
                         const wrappedFn = () => {
                             currentEl = bindEl;
                             val(e);
                             currentEl = null;
-                        }
+                        };
 
                         if (mods.includes("prevent")) e.preventDefault();
                         if (mods.includes("stop")) e.stopPropagation();
@@ -314,7 +320,9 @@
                         } else wrappedFn();
                     };
 
-                    bindEl.addEventListener(eventName, listener, { once: mods.includes("once") });
+                    (mods.includes("window") ? window : bindEl).addEventListener(eventName, listener, {
+                        once: mods.includes("once"),
+                    });
                 } else {
                     currentEl = bindEl;
                     runTracked(async () => {
@@ -322,17 +330,15 @@
                         const [main, sub] = key.split(".");
 
                         if (sub) {
-                            if (main === "class")
-                                bindEl.classList.toggle(sub, resolvedVal);
-                            else
-                                bindEl[main][sub] = resolvedVal;
+                            if (main === "class") bindEl.classList.toggle(sub, resolvedVal);
+                            else bindEl[main][sub] = resolvedVal;
                         } else bindEl[main] = resolvedVal;
                     });
                     currentEl = null;
                 }
             });
 
-            dispatch(el, "init", {}, false);
+            dispatch(bindEl, "init", { bubbles: false });
         });
         // --- END bind
     };

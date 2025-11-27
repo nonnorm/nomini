@@ -1,5 +1,4 @@
-rm -r ./dist
-mkdir ./dist
+rm ./dist/*
 
 ./scripts/devour.sh > ./dist/nomini.min.js
 
