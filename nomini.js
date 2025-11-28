@@ -7,7 +7,7 @@
     // Utility functions
     const dispatch = (el, name, opts) => {
         opts = { bubbles: true, detail: {}, ...opts };
-        el.dispatchEvent(new CustomEvent(`nm${name}`, opts));
+        el.dispatchEvent(new CustomEvent(name, opts));
     };
 
     const evalExpression = (expression, data, thisArg) => {
@@ -95,7 +95,7 @@
                         swap(buf);
                     }
                 })
-                .catch((err) => dispatch(el, "error", { detail: { err, url } }))
+                .catch((err) => dispatch(el, "fetcherr", { detail: { err, url } }))
                 .finally(() => this._nmFetching = false);
         },
         $nmData() {
@@ -123,27 +123,35 @@
             return datasets;
         },
         $watch: runTracked,
-        $dispatch(evt, detail) {
-            currentEl.dispatchEvent(new CustomEvent(evt, { detail }))
+        $dispatch(evt, detail, opts) {
+            dispatch(currentEl, evt, { detail, ...opts });
+        },
+        $persist(prop, key) {
+            key = key || `_nmProp-${prop}`;
+
+            const stored = localStorage[key];
+            if (stored) this[prop] = JSON.parse(stored);
+
+            runTracked(() => { localStorage[key] = JSON.stringify(this[prop]) });
         }
     };
 
     // --- BEGIN fetch
     const swap = (text) => {
-        const fragments = new DOMParser().parseFromString(text, "text/html").body
-            .children;
+        const template = document.createElement("template");
+        template.innerHTML = text;
 
-        for (const fragment of fragments) {
+        for (const fragment of template.content.children) {
             if (!fragment.id) {
-                console.warn(`[Nomini] Fragment is missing an id: ${fragment}`);
+                console.warn("[Nomini] Fragment is missing an id: ", fragment);
                 continue;
             }
 
-            const strategy = fragment.getAttribute("nm-swap") || "outerHTML";
+            const strategy = fragment.getAttribute("nm-swap") || "outer";
             const target = document.getElementById(fragment.id);
 
             if (!target) {
-                console.warn(`[Nomini] Swap target with id "${fragment.id}" not found`);
+                console.warn("[Nomini] Swap target not found: #", fragment.id);
                 continue;
             }
 
@@ -160,12 +168,12 @@
                 target.replaceWith(fragment);
                 init(fragment)
             }
-            else if (/before|after|prepend|append/.test(strategy)) {
+            else if (/(before|after|prepend|append)/.test(strategy)) {
                 const kids = [...fragment.childNodes];
                 target[strategy](...kids);
                 kids.forEach((n) => n.nodeType === 1 && init(n));
             }
-            else console.error(`[Nomini] Invalid swap strategy "${strategy}"`);
+            else console.error("[Nomini] Invalid swap strategy: ", strategy);
         }
     };
     // --- END fetch
@@ -206,20 +214,18 @@
                 const slot = templateFrag.querySelector("slot:not([name])");
                 if (slot) slot.replaceWith(...useEl.childNodes);
                 useEl.replaceChildren(templateFrag);
-            } else console.error(`[Nomini] no template with id "${id}"`);
+            } else console.error("[Nomini] No template with id: #", id);
         });
         // --- END template
 
         // --- BEGIN data
         queryAttr(baseEl, "[nm-data]").forEach((dataEl) => {
-            const rawData = {
-                ...evalExpression(dataEl.getAttribute("nm-data"), {}, dataEl),
-                ...helpers,
-            };
+            const rawData = { ...evalExpression(dataEl.getAttribute("nm-data"), {}, dataEl), ...helpers };
 
-            const trackedDeps = Object.fromEntries(
-                Object.keys(rawData).map((k) => [k, new Set()]),
-            );
+            const trackedDeps = Object.keys(rawData).reduce((obj, k) => {
+                obj[k] = new Set();
+                return obj;
+            }, {});
 
             const proxyData = new Proxy(rawData, {
                 get(obj, prop) {
@@ -263,16 +269,18 @@
             const proxyData = getClosestProxy(el);
 
             queryAttr(el, "[name]").forEach((inputEl) => {
+                const inputType = inputEl.type;
+
                 const setVal = () => {
                     let res;
 
-                    if (inputEl.type === "checkbox")
+                    if (inputType === "checkbox")
                         res = inputEl.checked;
-                    else if (inputEl.type === "radio" && inputEl.checked)
+                    else if (inputType === "radio" && inputEl.checked)
                         res = inputEl.value;
-                    else if (inputEl.type === "file")
+                    else if (inputType === "file")
                         res = inputEl.files;
-                    else if (/number|range/.test(inputEl.type))
+                    else if (/number|range/.test(inputType))
                         res = +inputEl.value;
                     else res = inputEl.value;
 
@@ -325,9 +333,9 @@
                     });
                 } else {
                     currentEl = bindEl;
+                    const [main, sub] = key.split(".");
                     runTracked(async () => {
                         const resolvedVal = await val();
-                        const [main, sub] = key.split(".");
 
                         if (sub) {
                             if (main === "class") bindEl.classList.toggle(sub, resolvedVal);

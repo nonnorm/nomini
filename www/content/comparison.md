@@ -5,7 +5,7 @@ title = "Comparison"
 
 | | Nomini | HTMX v4 | Alpine | Datastar |
 |-|-|-|-|-|
-| **Bundle Size (.min.br)** | 🟢 ~1.8kb | 🟡 ~10.2kb | 🟡 ~14.7kb | 🟡 ~11.6kb |
+| **Bundle Size (.min.br)** | 🟢 ~1.8kb | 🟡 ~10.2kb | 🟡 ~14.7kb | 🟡 ~10.6kb |
 | **Main Purpose** | Lightweight reactivity and partial page updates | Easy partial page updates | Full-featured reactivity system | Full-featured streaming page updates and reactivity |
 | **Reactivity Model** | Proxy | 🔴 N/A | Proxy | Signals and Proxy |
 | **Data Scoping** | 🟡 `nm-data`, no inheritance | 🔴 N/A | 🟢 Global tree with overrides | 🟢 Global tree with overrides |
