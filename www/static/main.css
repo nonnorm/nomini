@@ -14,6 +14,7 @@
 }
 
 :root {
+    scroll-behavior: smooth;
     --nomini-blue: #112d85;
     --nomini-yellow: #f9dc70;
 }
@@ -148,7 +149,8 @@ pre {
 }
 
 .demo-red {
-    color: var(--red-6);
+    background-color: var(--red-11);
+    color: var(--yellow-4);
 }
 
 dialog {

@@ -1,44 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
 
-	<head>
-		<meta http-equiv="content-type" content="text/html; charset=utf-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-		<link href="/main.css" rel="stylesheet">
-		<link href="/favicon.svg" rel="icon">
+	<link href="/main.css" rel="stylesheet">
+	<link href="/favicon.svg" rel="icon">
 
-		<script src="/nomini.js" defer></script>
+	<script src="/nomini.js" defer></script>
 
-		<meta name="description" content="Nomini is a tiny (~2kb) layer on top of HTML that gives you access to reactive variables and partial page swaps directly in your markup.">
+	<meta name="description"
+		content="Nomini is a tiny (~2kb) layer on top of HTML that gives you access to reactive variables and partial page swaps directly in your markup.">
 
-		<title>
-			{%- block title -%}
-				Nomini — hypermedia with reactivity
-			{%- endblock -%}
-		</title>
-	</head>
+	<title>
+		{%- block title -%}
+		Nomini — hypermedia with reactivity
+		{%- endblock -%}
+	</title>
+</head>
 
-	<body nm-data>
-		<header>
-			<img class="logo" src="/logo.svg" alt="Nomini logo, the word nomini in dark blue and yellow with a curve going over the middle i">
-			<nav>
-				<a href="/">Home</a>
-				|
-				<a href="/docs">Docs</a>
-				|
-				<a href="/comparison">Comparisons</a>
-				|
-				<a href="https://github.com/nonnorm/nomini" target="_blank">GitHub</a>
-			</nav>
-		</header>
-		<audio preload="none" nm-ref="jingle" src="/jingle.m4a"></audio>
-		<button class="jingle" aria-hidden="true" nm-on="click: () => $refs.jingle.play()"></button>
-		<main>
-			{% block content %}
-				{{ section.content | safe }}
-			{% endblock %}
-		</main>
-	</body>
+<body nm-data>
+	<header>
+		<img class="logo" src="/logo.svg"
+			alt="Nomini logo, the word nomini in dark blue and yellow with a curve going over the middle i">
+		<nav>
+			<a href="/">Home</a>
+			|
+			<a href="/docs">Docs</a>
+			|
+			<a href="/comparison">Comparisons</a>
+			|
+			<a href="https://github.com/nonnorm/nomini" target="_blank">GitHub</a>
+		</nav>
+	</header>
+	<audio preload="none" nm-ref="jingle" src="/jingle.m4a"></audio>
+	<button class="jingle" aria-hidden="true" nm-bind="onclick: () => $refs.jingle.play()"></button>
+	<main>
+		{% block content %}
+		{{ section.content | safe }}
+		{% endblock %}
+	</main>
+</body>
 
 </html>

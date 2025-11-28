@@ -18,42 +18,7 @@ or:
 nm-bind="{ textContent: () => name }"
 ```
 
-Any object-like attribute will have `this` bound to the element with the attribute.
-
-### nm-on
-`nm-on` simply gives you access to one or more inline event listeners. It supports all DOM events, not just the ones with built-in `on*` properties, including user-emitted ones or library-emitted ones. As with all the other `nm-` methods, you can access reactive data declared in an [`nm-data`](#nm-data), along with any built-in [helpers](#helpers). Multiple events can be listened to by providing multiple key/value pairs.
-
-```html
-<button nm-on="click: () => alert('OW!')">Click Me!</button>
-```
-<button nm-on="click: () => alert('OW!')">Click Me!</button>
-
-#### Inline Event Modifiers
-Nomini additionally supports some additional syntax sugar for common event handling patterns. Postfix the event name with one or more of these modifiers to change the behavior:
-- **`.prevent`**: Calls `e.preventDefault`.
-- **`.stop`**: Calls `e.stopPropagation`.
-- **`.debounce<ms>`**: Debounces the event by the number of milliseconds listed.
-- **`.once`**: Removes the event listener after it's called once.
-
-Because object keys can’t contain dots without quoting, you must wrap modified event names in string literals.
-
-```html
-<button nm-on="'click.once': () => alert('After viewed, this message will self-destruct.')">
-    Click Me!
-</button>
-```
-<button nm-on="'click.once': () => alert('After viewed, this message will self-destruct.')">
-    Click Me!
-</button>
-
-```html
-<button nm-on="'click.debounce200': () => alert('Stop bothering me.')">
-    Click Me!
-</button>
-```
-<button nm-on="'click.debounce200': () => alert('Stop bothering me.')">
-    Click Me!
-</button>
+Any object-like attribute will have `this` bound to the element with the attribute. Often, the keys of the object can have **modifiers**, which will be separated by the main key with dots. If a key has modifiers, it must be wrapped in quotes to be parsed correctly.
 
 ### nm-data
 `nm-data` allows you to declare a scope of reactive JavaScript data. It will be globally accessible from `nm-` attributes in this scope only. Scopes are not inherited. If your data is not reactive and it's a simple type, consider using `data-*` attributes and the [`$dataset`](#dataset) function instead.
@@ -83,62 +48,131 @@ Nomini has no special syntax for computed properties, but because the data scope
 ```
 
 ### nm-bind
-`nm-bind` binds any property of an element to a JavaScript expression, whether static or reactive from an `nm-data`. All values in a bind are **required** to be an arrow function. This does not allow binding to arbitrary attributes, but nearly every meaningful attribute has a JS property equivalent. Multiple binds can be toggled by providing multiple key/value pairs.
+`nm-bind` binds any property of an element to a JavaScript expression, whether static or reactive from an `nm-data`. You can access reactive data declared in an [`nm-data`](#nm-data), along with any built-in [helpers](#helpers) at any point. Multiple binds can be toggled by providing multiple key/value pairs. All values in a bind are **required** to be an arrow function. If something isn't working, check that it's in an arrow function. The function will be called once upon initialization and again whenever any reactive data that it depends on changes. 
+
+`nm-bind` does not allow binding to arbitrary attributes, but nearly every meaningful attribute has a JS property equivalent. If you want to retrieve custom data, that should be stored in `data-*` attributes and can be accessed through the [`$dataset` helper](#dataset).
 
 ```html
 <p nm-bind="textContent: () => 'Lorem '.repeat(12)"></p>
 ```
 <p nm-bind="textContent: () => 'Lorem '.repeat(12)"></p>
 
-Of course, its greatest strength is when it's combined with `nm-data`.
+Of course, its greatest strength is when combined with `nm-data`.
 ```html
 <div nm-data="text: ''">
-    <input nm-on="input: () => text = this.value">
+    <input nm-bind="oninput: () => text = this.value">
     <p nm-bind="textContent: () => text"></p>
 </div>
 ```
 <div nm-data="text: ''">
-    <input nm-on="input: () => text = this.value">
+    <input nm-bind="oninput: () => text = this.value">
     <p nm-bind="textContent: () => text"></p>
 </div>
+
+#### Event Listeners
+`nm-bind` additionally gives you access to inline event listeners, bound like they would be with the built-in `on*` properties. However, it supports all DOM events, including user-emitted ones or [library-emitted ones](#events). Multiple events can be listened to by providing multiple key/value pairs. The callback can take an event parameter, and it will not be called until the event is triggered.
+
+```html
+<button nm-bind="onclick: () => alert('OW!')">Click Me!</button>
+```
+<button nm-bind="onclick: () => alert('OW!')">Click Me!</button>
+
+##### Inline Event Modifiers
+Nomini additionally supports some additional syntax sugar for common event handling patterns. Postfix the event name with one or more of these modifiers to change the behavior:
+- **`.prevent`**: Calls `e.preventDefault`.
+- **`.stop`**: Calls `e.stopPropagation`.
+- **`.debounce<ms>`**: Debounces the event by the number of milliseconds listed.
+- **`.once`**: Removes the event listener after it's called once.
+- **`.window`**: Adds the event listener to the window instead of the current element.
+
+```html
+<button nm-bind="'onclick.once': () => alert('After viewed, this message will self-destruct.')">
+    Click Me!
+</button>
+```
+<button nm-bind="'onclick.once': () => alert('After viewed, this message will self-destruct.')">
+    Click Me!
+</button>
+
+```html
+<button nm-bind="'onclick.debounce250': () => alert('Stop bothering me.')">
+    Click Me!
+</button>
+```
+<button nm-bind="'onclick.debounce250': () => alert('Stop bothering me.')">
+    Click Me!
+</button>
+
+```html
+<section nm-bind="'onresize.window.debounce10': () => {
+    this.style.height = window.innerHeight / 3 + 'px';
+    this.style.width = window.innerWidth / 3 + 'px';
+}">
+    1/3th scale window (resize me)<br>
+    (Yes, this could also be done with vw and vh properties)
+</section>
+```
+<section nm-bind="'onresize.window.debounce10': () => {
+    this.style.height = window.innerHeight / 3 + 'px';
+    this.style.width = window.innerWidth / 3 + 'px';
+}">
+    1/3th scale window (resize me)<br>
+    (Yes, this could also be done with vw and vh properties)
+</section>
+
+#### Nested Binds
+You can bind to properties one level deep by separating the levels by dots in your key. Remember to quote the key.
+
+```html
+<section nm-bind="'style.backgroundColor': () => 'lightgreen'">
+    Words words words
+</section>
+```
+<section nm-bind="'style.backgroundColor': () => 'lightgreen'">
+    Words words words
+</section>
+
+#### Class Support
+You can also bind to classes using the nested bind support. Bind to a class using the `class.<classname>` property, where the bind function is expected to return a boolean.
+
+```html
+<button nm-data="red: false" nm-bind="{
+    'class.demo-red': () => red,
+    onclick: () => red = !red
+}">
+    I'm angry
+</button>
+```
+<button nm-data="red: false" nm-bind="{
+    'class.demo-red': () => red,
+    onclick: () => red = !red
+}">
+    I'm angry
+</button>
 
 #### Async Support
 To support async functions, all binds are automatically awaited if required.
 
 **Caution**: Be careful when using async functions. Any property accesses after an `await` will very likely not be reactive. Async function support is provided for the cases where it's useful, but it can be the source of many hard-to-find bugs.
 
-### nm-class
-Similar to `nm-bind`, it conditionally toggles classes reactively. Multiple classes can be toggled by providing multiple key/value pairs.
-
-```html
-<div nm-data="red: false">
-    <button nm-on="click: () => red = !red">Click Me!</button>
-    <p nm-class="'demo-red': () => red">Lorem ipsum dolor sit amit</p>
-</div>
-```
-<div nm-data="red: false">
-    <button nm-on="click: () => red = !red">Click Me!</button>
-    <p nm-class="'demo-red': () => red">Lorem ipsum dolor sit amit</p>
-</div>
-
 ### nm-ref
 Grab a reference to the current element and put it into the `$refs` object.
 ```html
-    <dialog nm-ref="dialog">
-        <button nm-on="click: () => $refs.dialog.close()">×</button>
-        You can open dialogs!
-    </dialog>
-    <button nm-on="click: () => $refs.dialog.showModal()">Click Me!</button>
+<dialog nm-ref="dialog">
+    <button nm-bind="onclick: () => $refs.dialog.close()">×</button>
+    You can open dialogs!
+</dialog>
+<button nm-bind="onclick: () => $refs.dialog.showModal()">Click Me!</button>
 ```
 
 <dialog nm-ref="dialog">
-    <button nm-on="click: () => $refs.dialog.close()">×</button>
+    <button nm-bind="onclick: () => $refs.dialog.close()">×</button>
     You can open dialogs!
 </dialog>
-<button nm-on="click: () => $refs.dialog.showModal()">Click Me!</button>
+<button nm-bind="onclick: () => $refs.dialog.showModal()">Click Me!</button>
 
 ### nm-form
-Purely a convenience helper, it synchronizes all form inputs with the reactive scope by name. It works on a container containing inputs with a `name` or on inputs themselves. It's equivalent to putting an `nm-bind` on all of the form elements. Additionally, it will disable any submit buttons if a request is in progress.
+Purely a convenience helper, it synchronizes all form inputs with the reactive scope by name. It works on a container containing inputs with a `name` or on inputs themselves. It's equivalent to putting an `nm-bind` event listener on all of the form elements. Additionally, it will disable any submit buttons if a request is in progress.
 
 ```html
 <div nm-data>
@@ -188,35 +222,70 @@ $post("/save", { id: 1 })
 $fetch("/url", "PUT", { foo: 1 })
 ```
 
-Nomini will automatically encode all reactive data, `data-*` attributes from the scope, and provided data into the request. During the fetch, the reactive `_nmFetching` will be set to true. The [`nmerror`](#nmerror) event will automatically be dispatched on a non-2xx status code or a network error.
+Nomini will automatically encode all reactive data, `data-*` attributes from the scope, and provided data into the request. During the fetch, the reactive `_nmFetching` will be set to true. The [`fetcherr`](#fetcherr) event will automatically be dispatched on a non-2xx status code or a network error.
 
 #### Response Format
-Nomini supports two types of responses: oneshot and streaming. Every chunk sent to the server, whether as a oneshot or streaming response, is expected to contain one or more complete HTML fragments with a top-level `id`. Optionally, the `nm-swap` attribute is used to determine how the content gets swapped in. Options are: `outerHTML` (default), `innerHTML`, `beforebegin`, `afterbegin`, `beforeend`, `afterend`.
+Nomini supports two types of responses: oneshot and streaming. Every chunk sent to the server, whether as a oneshot or streaming response, is expected to contain one or more complete HTML fragments with a top-level `id`. Optionally, the `nm-swap` attribute is used to determine how the content gets swapped in. Options are: `outer` (default), `inner`, `before`, `prepend`, `append`, `after`. `outer` will replace the element with the corresponding ID with the new element, all others will discard the new wrapper element and replace the children of the existing element with the children of the wrapper.
 
 Example server response:
 ```html
     <div id="swap-target">
         <!-- content goes here -->
     </div>
-    <tr id="table" nm-swap="beforeend">
-        <!-- content goes here -->
-    </tr>
+    <table id="table" nm-swap="beforeend">
+        <tr>
+            <!-- content goes here -->
+        </tr>
+    </table>
 ```
 
 ### $nmData
 Used internally to collect all computed values, primitives, arrays, and other encodable user data for `$fetch`. Not likely to be needed by users.
 
+### $dispatch
+Dispatch an event on the current element. Can be listened to higher up on the tree by [`nm-bind`](#nm-bind).
+```js
+$dispatch("my-event")
+// Second attribute describes 'detail' property of the event
+$dispatch("scary", { run: "away" })
+// Third attribute is the general options property
+$dispatch("help-me", { so: "alone" }, { bubbles: false })
+```
+
+### $watch
+Takes a callback, will run it once on initialization and once whenever its dependent variables change.
+```html
+<input name="text" nm-data nm-form nm-bind="oninit: () => $watch(() => console.log(text))">
+```
+<input name="text" nm-data nm-form nm-bind="oninit: () => $watch(() => console.log(text))">
+
+### $persist
+Hydrates a variable with data from localStorage and reactively links it to localStorage.
+```js
+// Call this in 'oninit', assuming 'text' is a variable in the data
+$persist('text')
+// Can also provide a custom localStorage key
+$persist('text', 'myText101')
+```
+
 ---
 
 ## Events
-### nminit
+### init
 Dispatched on any element as it's initialized by Nomini. Does **not** bubble.
 
 ```html
-<p nm-on="{ 'nminit.debounce2000': () => $get('/refresh') }"></p>
+<p nm-bind="{ 'oninit.debounce2000': () => $get('/refresh') }"></p>
 ```
 
-### nmerror
+### destroy
+Dispatched on any element when it's about to be swapped out by Nomini. Does **not** bubble.
+
+```html
+<p nm-bind="{ 'oninit.debounce2000': () => $get('/refresh') }"></p>
+```
+
+### fetcherr
 Dispatched by `$fetch` when a request fails or returns a non-2xx response code. Bubbles outside the scope so that it can be handled globally. The `detail` property contains an `err` message and a `url`.
 
 ---
