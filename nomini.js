@@ -99,7 +99,7 @@
                 .finally(() => this._nmFetching = false);
         },
         $nmData() {
-            const isPrimitive = (x) => /string|number|boolean/.test(typeof x);
+            const isPrimitive = (x) => x !== Object(x);
 
             return Object.entries(this).reduce((acc, [k, v]) => {
                 if (!/^[a-z]+$/i.test(k)) return acc;
@@ -126,14 +126,18 @@
         $dispatch(evt, detail, opts) {
             dispatch(currentEl, evt, { detail, ...opts });
         },
+        // --- BEGIN helpers
         $persist(prop, key) {
             key = key || `_nmProp-${prop}`;
 
             const stored = localStorage[key];
             if (stored) this[prop] = JSON.parse(stored);
 
-            runTracked(() => { localStorage[key] = JSON.stringify(this[prop]) });
-        }
+            runTracked(() => {
+                localStorage[key] = JSON.stringify(this[prop]);
+            });
+        },
+        // --- END helpers
     };
 
     // --- BEGIN fetch
@@ -155,7 +159,9 @@
                 continue;
             }
 
-            dispatch(target, "destroy")
+            queryAttr(target, "[nm-bind]").forEach(
+                (el) => dispatch(el, "destroy", { bubbles: false })
+            );
 
             // --- BEGIN morph
             cssMorph(fragment);
@@ -163,17 +169,15 @@
 
             if (strategy === "inner") {
                 target.replaceChildren(...fragment.childNodes);
-                init(target)
+                init(target);
             } else if (strategy === "outer") {
                 target.replaceWith(fragment);
-                init(fragment)
-            }
-            else if (/(before|after|prepend|append)/.test(strategy)) {
+                init(fragment);
+            } else if (/(before|after|prepend|append)/.test(strategy)) {
                 const kids = [...fragment.childNodes];
                 target[strategy](...kids);
                 kids.forEach((n) => n.nodeType === 1 && init(n));
-            }
-            else console.error("[Nomini] Invalid swap strategy: ", strategy);
+            } else console.error("[Nomini] Invalid swap strategy: ", strategy);
         }
     };
     // --- END fetch
@@ -220,32 +224,33 @@
 
         // --- BEGIN data
         queryAttr(baseEl, "[nm-data]").forEach((dataEl) => {
-            const rawData = { ...evalExpression(dataEl.getAttribute("nm-data"), {}, dataEl), ...helpers };
+            const rawData = {
+                ...evalExpression(dataEl.getAttribute("nm-data"), {}, dataEl),
+                ...helpers,
+            };
 
-            const trackedDeps = Object.keys(rawData).reduce((obj, k) => {
-                obj[k] = new Set();
-                return obj;
-            }, {});
+            const trackedDeps = {};
 
             const proxyData = new Proxy(rawData, {
                 get(obj, prop) {
-                    if (prop in trackedDeps && currentBind)
-                        trackedDeps[prop].add(currentBind);
+                    if (currentBind) (trackedDeps[prop] ||= new Set()).add(currentBind);
 
                     return obj[prop];
                 },
                 set(obj, prop, val) {
                     obj[prop] = val;
 
-                    if (!(prop in trackedDeps)) trackedDeps[prop] = new Set();
+                    const deps = trackedDeps[prop];
 
-                    // Required to prevent infinite loops (this took 3 hours to debug!)
-                    const thisBind = currentBind;
-                    currentBind = null;
+                    if (deps) {
+                        // Required to prevent infinite loops (this took 3 hours to debug!)
+                        const thisBind = currentBind;
+                        currentBind = null;
 
-                    trackedDeps[prop].forEach((fn) => fn());
+                        deps.forEach((fn) => fn());
 
-                    currentBind = thisBind;
+                        currentBind = thisBind;
+                    }
 
                     return true;
                 },
@@ -303,14 +308,20 @@
         queryAttr(baseEl, "[nm-bind]").forEach((bindEl) => {
             const proxyData = getClosestProxy(bindEl);
 
-            const props = evalExpression(bindEl.getAttribute("nm-bind"), proxyData, bindEl);
+            const props = evalExpression(
+                bindEl.getAttribute("nm-bind"),
+                proxyData,
+                bindEl,
+            );
 
             Object.entries(props).forEach(([key, val]) => {
                 if (key.startsWith("on")) {
                     const [eventName, ...mods] = key.slice(2).split(".");
 
+                    // --- BEGIN evtmods
                     const debounceMod = mods.find((val) => val.startsWith("debounce"));
                     const delay = +debounceMod?.slice(8);
+                    // --- END evtmods
 
                     const listener = (e) => {
                         const wrappedFn = () => {
@@ -319,15 +330,21 @@
                             currentEl = null;
                         };
 
+                        // --- BEGIN evtmods
                         if (mods.includes("prevent")) e.preventDefault();
                         if (mods.includes("stop")) e.stopPropagation();
 
                         if (delay) {
                             clearTimeout(bindEl.nmTimer);
                             bindEl.nmTimer = setTimeout(wrappedFn, delay);
-                        } else wrappedFn();
+                            return;
+                        }
+                        // --- END evtmods
+
+                        wrappedFn();
                     };
 
+                    // I'm not getting rid of these modifiers, it's so short that it probably won't matter
                     (mods.includes("window") ? window : bindEl).addEventListener(eventName, listener, {
                         once: mods.includes("once"),
                     });

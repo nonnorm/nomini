@@ -38,13 +38,11 @@ If you prefer a CDN, just paste this line of code into your `<head>`.
 ```
 
 ### Flavors
-Nomini comes in 3 different flavors, all tiny but progressively more powerful:
-- **Core (<900 bytes)**: Tiny library similar to Alpine.js, but way smaller.
-    - Includes `nm-data`, `nm-bind`, `nm-ref`, standard helpers.
-- **AJAX (1.5kb)**: Alpine with the power of partial page swaps á la htmx.
-    - Includes above, fetch helpers, and reactive fetch variables.
-- **Full (1.8kb)**: Syntactical sugar to bring Nomini closer to more advanced libraries.
-    - Includes above, `nm-form`, `nm-use`, and CSS transition support for fetch
+Nomini comes in 2 different flavors, both tiny but surprisingly powerful:
+- **Core (<800 bytes, 1.5kb uncompressed)**: Featherweight event and data-binding library, best for integrating with more advanced hypermedia libraries.
+    - Includes `nm-data`, `nm-bind`, `nm-ref`, standard helpers (`$dataset`, `$watch`, `$dispatch`).
+- **Full (1.8kb, 4.5kb uncompressed)**: Syntactical sugar and AJAX support to bring Nomini closer to more advanced libraries.
+    - Includes above, `nm-form`, event modifiers, fetch helpers, reactive fetch variables, CSS transition support for fetch, `nm-use`, and advanced helpers (`$persist`).
 - Your own?: Use the [custom bundler script](https://github.com/nonnorm/nomini/blob/main/scripts/devour.sh) to customize your own tiny copy of Nomini.
 
 </section>
@@ -55,7 +53,7 @@ Nomini comes in 3 different flavors, all tiny but progressively more powerful:
 This project would not have existed without the inspiration of many other projects made by many talented developers. Thank you to:
 1. [Carson Gross](https://github.com/1cg) for his work on [htmx](https://github.com/bigskysoftware/htmx) v4, by which the multipurpose fetch helper was inspired, and [fixi](https://github.com/bigskysoftware/fixi), which was a benchmark for this library's minimalism.
 2. [Katrina Scialdone](https://github.com/kgscialdone) for their work on [Ajaxial](https://github.com/kgscialdone/ajaxial)—a spiritual precursor to fixi—and [Facet](https://github.com/kgscialdone/facet), which provided inspiration for the `nm-use` templating system.
-3. [Delaney Gillilan](https://github.com/delaneyj) for his work on [datastar](https://github.com/starfederation/datastar), which was a useful feature benchmark and inspiration for some of the helper functions.
+3. [Delaney Gillilan](https://github.com/delaneyj) and the Datastar core team for their work on [Datastar](https://github.com/starfederation/datastar), which was a useful feature benchmark and inspiration for some of the helper functions.
 4. [Aiden Bai](https://github.com/aidenybai) for his work on [dababy](https://github.com/aidenybai/dababy), from which this project was directly forked for its innovative idea of JS property binding.
 
 </section>
