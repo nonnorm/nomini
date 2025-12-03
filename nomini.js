@@ -1,4 +1,4 @@
-// Nomini v0.3.0
+// Nomini v0.3.1
 // Inspired by aidenybai/dababy
 // Copyright (c) 2025 nonnorm
 // Licensed under the MIT License.
@@ -34,7 +34,7 @@
     };
 
     const getClosestProxy = (el) =>
-        el.closest("[nm-data]")?.nmProxy || { ...helpers };
+        el.closest("[nm-data]")?.nmProxy || helpers();
 
     const runTracked = (fn) => {
         currentBind = fn;
@@ -42,18 +42,24 @@
         currentBind = null;
     };
 
+    const runWithEl = (el, fn) => {
+        currentEl = el;
+        fn();
+        currentEl = null;
+    };
+
     // Important reactivity stuff
     let currentBind = null;
     let currentEl = null;
 
     // Helpers that are included with every data object
-    const helpers = {
+    const helpers = () => ({
         // --- BEGIN ref
         $refs: {},
         // --- END ref
         // --- BEGIN fetch
         _nmFetching: false,
-        _nmAbort: null,
+        _nmAbort: new AbortController(),
         $get(url, data) {
             this.$fetch(url, "GET", data);
         },
@@ -63,7 +69,7 @@
         $fetch(url, method, data) {
             const el = currentEl;
 
-            if (this._nmAbort) this._nmAbort.abort();
+            this._nmAbort.abort();
             this._nmAbort = new AbortController();
             this._nmFetching = true;
 
@@ -91,7 +97,7 @@
                     const decoder = new TextDecoder();
 
                     for await (const chunk of res.body) {
-                        const buf = decoder.decode(chunk, { stream: true });
+                        const buf = decoder.decode(chunk);
                         swap(buf);
                     }
                 })
@@ -115,7 +121,7 @@
             let el = currentEl;
 
             while (el) {
-                datasets = { ...datasets, ...el.dataset };
+                datasets = { ...el.dataset, ...datasets };
                 if (el.hasAttribute("nm-data")) break;
                 el = el.parentElement;
             }
@@ -125,6 +131,14 @@
         $watch: runTracked,
         $dispatch(evt, detail, opts) {
             dispatch(currentEl, evt, { detail, ...opts });
+        },
+        $debounce(fn, ms, abortable = true) {
+            const el = currentEl;
+            const signal = this._nmAbort.signal;
+            clearTimeout(el.nmTimer);
+            el.nmTimer = setTimeout(() => {
+                if (!(abortable && signal.aborted)) runWithEl(el, fn)
+            }, ms);
         },
         // --- BEGIN helpers
         $persist(prop, key) {
@@ -138,7 +152,7 @@
             });
         },
         // --- END helpers
-    };
+    });
 
     // --- BEGIN fetch
     const swap = (text) => {
@@ -226,7 +240,7 @@
         queryAttr(baseEl, "[nm-data]").forEach((dataEl) => {
             const rawData = {
                 ...evalExpression(dataEl.getAttribute("nm-data"), {}, dataEl),
-                ...helpers,
+                ...helpers(),
             };
 
             const trackedDeps = {};
@@ -324,24 +338,15 @@
                     // --- END evtmods
 
                     const listener = (e) => {
-                        const wrappedFn = () => {
-                            currentEl = bindEl;
-                            val(e);
-                            currentEl = null;
-                        };
-
                         // --- BEGIN evtmods
+
                         if (mods.includes("prevent")) e.preventDefault();
                         if (mods.includes("stop")) e.stopPropagation();
 
-                        if (delay) {
-                            clearTimeout(bindEl.nmTimer);
-                            bindEl.nmTimer = setTimeout(wrappedFn, delay);
-                            return;
-                        }
-                        // --- END evtmods
-
-                        wrappedFn();
+                        if (delay) proxyData.$debounce(() => val(e), delay);
+                        else
+                            // --- END evtmods
+                            runWithEl(bindEl, () => val(e));
                     };
 
                     // I'm not getting rid of these modifiers, it's so short that it probably won't matter
@@ -349,17 +354,17 @@
                         once: mods.includes("once"),
                     });
                 } else {
-                    currentEl = bindEl;
                     const [main, sub] = key.split(".");
-                    runTracked(async () => {
-                        const resolvedVal = await val();
+                    runWithEl(bindEl,
+                        () => runTracked(async () => {
+                            const resolvedVal = await val();
 
-                        if (sub) {
-                            if (main === "class") bindEl.classList.toggle(sub, resolvedVal);
-                            else bindEl[main][sub] = resolvedVal;
-                        } else bindEl[main] = resolvedVal;
-                    });
-                    currentEl = null;
+                            if (sub) {
+                                if (main === "class") bindEl.classList.toggle(sub, resolvedVal);
+                                else bindEl[main][sub] = resolvedVal;
+                            } else bindEl[main] = resolvedVal;
+                        })
+                    );
                 }
             });
 
