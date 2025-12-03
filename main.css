@@ -1,0 +1,185 @@
+@import url("https://cdn.jsdelivr.net/npm/open-props@1.7.16/open-props.min.css");
+
+@font-face {
+    font-family: 'Jost';
+    src: url('Jost-Regular.woff2') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+}
+
+:root {
+    scroll-behavior: smooth;
+    --nomini-blue: #112d85;
+    --nomini-yellow: #f9dc70;
+}
+
+body {
+    font-family: Jost, sans-serif;
+    line-height: 1.6;
+    background-image: radial-gradient(circle, var(--nomini-blue) 1px, var(--gray-0) 0);
+    background-size: 35px 35px;
+}
+
+main {
+    padding-block: var(--size-2);
+    padding-inline: 6vw;
+
+    display: grid;
+    grid-template-columns: minmax(30ch, 1fr);
+    gap: var(--size-5);
+
+    @media (min-width: 800px) {
+        grid-template-columns: minmax(max-content, 1fr) minmax(30ch, 6fr) 1fr;
+
+        >* {
+            grid-column: 2;
+        }
+    }
+}
+
+header {
+    height: var(--size-8);
+    background-color: var(--blue-6);
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    gap: var(--size-3);
+    padding-block: var(--size-2);
+    border-bottom: var(--border-size-3) solid var(--blue-9);
+}
+
+.toc {
+    background-color: var(--blue-0);
+    grid-column: 1;
+    padding: var(--size-2);
+    border-radius: var(--radius-1);
+    border: var(--border-size-2) var(--nomini-blue) dashed;
+    height: max-content;
+
+    @media (min-width: 800px) {
+        position: sticky;
+        top: var(--size-1);
+    }
+
+    a {
+        color: var(--blue-10);
+        font-size: var(--font-size-2);
+    }
+}
+
+nav {
+    color: white;
+
+    >a {
+        color: var(--nomini-yellow);
+        display: inline-block;
+        transition: transform 200ms;
+
+        &:hover {
+            transform: scale(1.12);
+        }
+    }
+}
+
+img {
+    height: 100%;
+}
+
+section, article {
+    background-color: var(--gray-1);
+
+    padding: var(--size-4) var(--size-3);
+
+    >pre+:not(:is(h2, h3, h4)) {
+        margin-top: var(--size-2);
+    }
+
+    >:not(:is(h1, h2, h3, h4))+* {
+        margin-top: var(--size-3);
+    }
+}
+
+article {
+    background-color: white;
+    border: var(--border-size-2) solid var(--gray-6);
+}
+
+section {
+    border-left: solid var(--blue-7) var(--border-size-3);
+    border-radius: var(--radius-2);
+    background-color: var(--gray-1);
+}
+
+.hero {
+    text-align: center;
+
+    background-color: var(--blue-1);
+    color: var(--blue-11);
+    border: solid var(--blue-7) var(--border-size-2);
+
+    >h1 {
+        font-size: var(--font-size-8);
+    }
+
+    >p {
+        font-size: var(--font-size-4);
+        color: var(--blue-10);
+    }
+}
+
+.jingle {
+    position: absolute;
+    cursor: pointer;
+    top: 401px;
+    left: 83px;
+    border: none;
+    background: none;
+}
+
+pre {
+    padding: var(--size-2);
+    border-radius: var(--radius-2);
+    overflow: auto;
+}
+
+.demo-red {
+    background-color: var(--red-11);
+    color: var(--yellow-4);
+}
+
+dialog {
+    margin: auto;
+}
+
+.table-wrapper {
+    overflow: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    border: solid var(--border-size-2) var(--gray-5);
+
+    thead th {
+        position: sticky;
+        top: 0;
+        background-color: white;
+        background-clip: padding-box;
+    }
+
+    th, td {
+        border-inline: solid var(--border-size-2) var(--gray-5);
+        text-align: center;
+        padding: var(--size-1);
+    }
+
+    tbody tr:nth-child(odd) {
+        background-color: var(--gray-2);
+    }
+}
