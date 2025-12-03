@@ -337,7 +337,7 @@
                     const delay = +debounceMod?.slice(8);
                     // --- END evtmods
 
-                    const listener = (e) => {
+                    const listener = (e) => runWithEl(bindEl, () => {
                         // --- BEGIN evtmods
 
                         if (mods.includes("prevent")) e.preventDefault();
@@ -346,8 +346,8 @@
                         if (delay) proxyData.$debounce(() => val(e), delay);
                         else
                             // --- END evtmods
-                            runWithEl(bindEl, () => val(e));
-                    };
+                            val(e);
+                    });
 
                     // I'm not getting rid of these modifiers, it's so short that it probably won't matter
                     (mods.includes("window") ? window : bindEl).addEventListener(eventName, listener, {
