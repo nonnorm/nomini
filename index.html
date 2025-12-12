@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<link href="/main.css" rel="stylesheet">
+	<link href="/favicon.svg" rel="icon">
+
+	<script src="/nomini.js" defer></script>
+
+	<meta name="description"
+		content="Nomini is a tiny (~2kb) layer on top of HTML that gives you access to reactive variables and partial page swaps directly in your markup.">
+
+	<title>Nomini — hypermedia with reactivity</title>
+</head>
+
+<body nm-data>
+	<header>
+		<img class="logo" src="/logo.svg"
+			alt="Nomini logo, the word nomini in dark blue and yellow with a curve going over the middle i">
+		<nav>
+			<a href="/">Home</a>
+			|
+			<a href="/docs">Docs</a>
+			|
+			<a href="/comparison">Comparisons</a>
+			|
+			<a href="https://github.com/nonnorm/nomini" target="_blank">GitHub</a>
+		</nav>
+	</header>
+	<audio preload="none" nm-ref="jingle" src="/jingle.m4a"></audio>
+	<button class="jingle" aria-hidden="true" nm-bind="onclick: () => $refs.jingle.play()"></button>
+	<main>
+		
+		<section class="hero">
+<h1 id="nomini">Nomini</h1>
+<p><em>The tiny, reactive, server-driven framework</em></p>
+</section>
+<section>
+<h2 id="uhh-what-is-nomini">Uhh... what is Nomini?</h2>
+<p>Nomini is <em>not</em>  your average JavaScript framework. Honestly, it’s barely a framework at all—and that’s the point. Nomini is just a tiny (~2kb) collection of useful attributes and helper functions that allow you to embrace writing JavaScript like the good old days, with a few modern conveniences layered on top.</p>
+<h3 id="features">Features:</h3>
+<ul>
+<li><code>nm-data</code>: The heart of Nomini. Create a reactive data scope, similar to Alpine's <code>x-data</code>.</li>
+<li><code>nm-bind</code>: Take any property of any element, including classes and event listeners, and bind it to a reactive variable.</li>
+</ul>
+<p><em><strong>(With these two attributes, you can build almost anything! Still, there are a few more that punch well above their weight.)</strong></em></p>
+<ul>
+<li><code>nm-ref</code>: Hold a reference to an element in your data scope.</li>
+<li><code>nm-form</code>: Automatically wire an entire form's inputs to reactive variables.</li>
+<li><code>nm-use</code>: A tiny templating system that takes advantage of <code>nm-data</code> scopes.</li>
+</ul>
+</section>
+<section>
+<h2 id="installation">Installation</h2>
+<p><strong>Nomini is a single file</strong> designed to be downloaded and vendored into your project (placed into a static directory).</p>
+<p>That means you never have to worry about dependency updates, you can add new features as you please, or you can remove filthy code that you don't use.</p>
+<p>If you prefer a CDN, just paste this line of code into your <code>&lt;head&gt;</code>.</p>
+<pre data-lang="html" style="background-color:#272822;color:#f8f8f2;" class="language-html "><code class="language-html" data-lang="html"><span>&lt;</span><span style="color:#f92672;">script </span><span style="color:#a6e22e;">defer src</span><span>=</span><span style="color:#e6db74;">&quot;https://cdn.jsdelivr.net/gh/nonnorm/nomini@0.3.0/dist/nomini.min.js&quot;</span><span>&gt;&lt;/</span><span style="color:#f92672;">script</span><span>&gt;
+</span></code></pre>
+<h3 id="flavors">Flavors</h3>
+<p>Nomini comes in 2 different flavors, both tiny but surprisingly powerful:</p>
+<ul>
+<li><strong>Core (&lt;800 bytes, 1.5kb uncompressed)</strong>: Featherweight event and data-binding library, best for integrating with more advanced hypermedia libraries.
+<ul>
+<li>Includes <code>nm-data</code>, <code>nm-bind</code>, <code>nm-ref</code>, standard helpers (<code>$dataset</code>, <code>$watch</code>, <code>$dispatch</code>).</li>
+</ul>
+</li>
+<li><strong>Full (1.8kb, 4.5kb uncompressed)</strong>: Syntactical sugar and AJAX support to bring Nomini closer to more advanced libraries.
+<ul>
+<li>Includes above, <code>nm-form</code>, event modifiers, fetch helpers, reactive fetch variables, CSS transition support for fetch, <code>nm-use</code>, and advanced helpers (<code>$persist</code>).</li>
+</ul>
+</li>
+<li>Your own?: Use the <a rel="noopener" target="_blank" href="https://github.com/nonnorm/nomini/blob/main/scripts/devour.sh">custom bundler script</a> to customize your own tiny copy of Nomini.</li>
+</ul>
+</section>
+<section>
+<h2 id="credits">Credits</h2>
+<p>This project would not have existed without the inspiration of many other projects made by many talented developers. Thank you to:</p>
+<ol>
+<li><a rel="noopener" target="_blank" href="https://github.com/1cg">Carson Gross</a> for his work on <a rel="noopener" target="_blank" href="https://github.com/bigskysoftware/htmx">htmx</a> v4, by which the multipurpose fetch helper was inspired, and <a rel="noopener" target="_blank" href="https://github.com/bigskysoftware/fixi">fixi</a>, which was a benchmark for this library's minimalism.</li>
+<li><a rel="noopener" target="_blank" href="https://github.com/kgscialdone">Katrina Scialdone</a> for their work on <a rel="noopener" target="_blank" href="https://github.com/kgscialdone/ajaxial">Ajaxial</a>—a spiritual precursor to fixi—and <a rel="noopener" target="_blank" href="https://github.com/kgscialdone/facet">Facet</a>, which provided inspiration for the <code>nm-use</code> templating system.</li>
+<li><a rel="noopener" target="_blank" href="https://github.com/delaneyj">Delaney Gillilan</a> and the Datastar core team for their work on <a rel="noopener" target="_blank" href="https://github.com/starfederation/datastar">Datastar</a>, which was a useful feature benchmark and inspiration for some of the helper functions.</li>
+<li><a rel="noopener" target="_blank" href="https://github.com/aidenybai">Aiden Bai</a> for his work on <a rel="noopener" target="_blank" href="https://github.com/aidenybai/dababy">dababy</a>, from which this project was directly forked for its innovative idea of JS property binding.</li>
+</ol>
+</section>
+
+		
+	</main>
+</body>
+
+</html>

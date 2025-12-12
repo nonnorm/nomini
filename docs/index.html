@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<link href="/main.css" rel="stylesheet">
+	<link href="/favicon.svg" rel="icon">
+
+	<script src="/nomini.js" defer></script>
+
+	<meta name="description"
+		content="Nomini is a tiny (~2kb) layer on top of HTML that gives you access to reactive variables and partial page swaps directly in your markup.">
+
+	<title>
+Documentation — Nomini
+</title>
+</head>
+
+<body nm-data>
+	<header>
+		<img class="logo" src="/logo.svg"
+			alt="Nomini logo, the word nomini in dark blue and yellow with a curve going over the middle i">
+		<nav>
+			<a href="/">Home</a>
+			|
+			<a href="/docs">Docs</a>
+			|
+			<a href="/comparison">Comparisons</a>
+			|
+			<a href="https://github.com/nonnorm/nomini" target="_blank">GitHub</a>
+		</nav>
+	</header>
+	<audio preload="none" nm-ref="jingle" src="/jingle.m4a"></audio>
+	<button class="jingle" aria-hidden="true" nm-bind="onclick: () => $refs.jingle.play()"></button>
+	<main>
+		
+
+<aside class="toc">
+	<ul>
+		
+		<li>
+			<a href="https:&#x2F;&#x2F;nomini.js.org&#x2F;docs&#x2F;#introduction">Introduction</a>
+			
+		</li>
+		
+		<li>
+			<a href="https:&#x2F;&#x2F;nomini.js.org&#x2F;docs&#x2F;#attributes">Attributes</a>
+			
+			<ul>
+				
+				<li>
+					<a href="https:&#x2F;&#x2F;nomini.js.org&#x2F;docs&#x2F;#nm-data">nm-data</a>
+				</li>
+				
+				<li>
+					<a href="https:&#x2F;&#x2F;nomini.js.org&#x2F;docs&#x2F;#nm-bind">nm-bind</a>
+				</li>
+				
+				<li>
+					<a href="https:&#x2F;&#x2F;nomini.js.org&#x2F;docs&#x2F;#nm-ref">nm-ref</a>
+				</li>
+				
+				<li>
+					<a href="https:&#x2F;&#x2F;nomini.js.org&#x2F;docs&#x2F;#nm-form">nm-form</a>
+				</li>
+				
+				<li>
+					<a href="https:&#x2F;&#x2F;nomini.js.org&#x2F;docs&#x2F;#nm-use">nm-use</a>
+				</li>
+				
+			</ul>
+			
+		</li>
+		
+		<li>
+			<a href="https:&#x2F;&#x2F;nomini.js.org&#x2F;docs&#x2F;#helpers">Helpers</a>
+			
+			<ul>
+				
+				<li>
+					<a href="https:&#x2F;&#x2F;nomini.js.org&#x2F;docs&#x2F;#dataset">$dataset</a>
+				</li>
+				
+				<li>
+					<a href="https:&#x2F;&#x2F;nomini.js.org&#x2F;docs&#x2F;#fetch-get-post">$fetch&#x2F;$get&#x2F;$post</a>
+				</li>
+				
+				<li>
+					<a href="https:&#x2F;&#x2F;nomini.js.org&#x2F;docs&#x2F;#nmdata">$nmData</a>
+				</li>
+				
+				<li>
+					<a href="https:&#x2F;&#x2F;nomini.js.org&#x2F;docs&#x2F;#dispatch">$dispatch</a>
+				</li>
+				
+				<li>
+					<a href="https:&#x2F;&#x2F;nomini.js.org&#x2F;docs&#x2F;#watch">$watch</a>
+				</li>
+				
+				<li>
+					<a href="https:&#x2F;&#x2F;nomini.js.org&#x2F;docs&#x2F;#persist">$persist</a>
+				</li>
+				
+			</ul>
+			
+		</li>
+		
+		<li>
+			<a href="https:&#x2F;&#x2F;nomini.js.org&#x2F;docs&#x2F;#events">Events</a>
+			
+			<ul>
+				
+				<li>
+					<a href="https:&#x2F;&#x2F;nomini.js.org&#x2F;docs&#x2F;#init">init</a>
+				</li>
+				
+				<li>
+					<a href="https:&#x2F;&#x2F;nomini.js.org&#x2F;docs&#x2F;#destroy">destroy</a>
+				</li>
+				
+				<li>
+					<a href="https:&#x2F;&#x2F;nomini.js.org&#x2F;docs&#x2F;#fetcherr">fetcherr</a>
+				</li>
+				
+			</ul>
+			
+		</li>
+		
+		<li>
+			<a href="https:&#x2F;&#x2F;nomini.js.org&#x2F;docs&#x2F;#magic-properties">Magic Properties</a>
+			
+			<ul>
+				
+				<li>
+					<a href="https:&#x2F;&#x2F;nomini.js.org&#x2F;docs&#x2F;#nmfetching">_nmFetching</a>
+				</li>
+				
+				<li>
+					<a href="https:&#x2F;&#x2F;nomini.js.org&#x2F;docs&#x2F;#nmabort">_nmAbort</a>
+				</li>
+				
+			</ul>
+			
+		</li>
+		
+	</ul>
+</aside>
+
+
+<article>
+	<h1>
+		Documentation
+	</h1>
+
+	<h2 id="introduction">Introduction</h2>
+<p>Nomini is a JavaScript framework that serves one very specific purpose: make it easier to write JavaScript in your HTML. It is not the first library to <a rel="noopener" target="_blank" href="https://htmx.org/essays/locality-of-behavior">consider</a> <a rel="noopener" target="_blank" href="https://unplannedobsolescence.com/blog/behavior-belongs-in-html/">these</a> <a rel="noopener" target="_blank" href="https://daverupert.com/2021/10/html-with-superpowers/">principles</a>. However, it does have one core tenet that many other libraries don't: <strong>minimalism</strong>. Nomini does not provide a lot—and that's on purpose. It exists to fill in the small gaps where HTML falls short (but hopefully won't <a rel="noopener" target="_blank" href="https://alexanderpetros.com/triptych/">some day</a>): partial page swaps, custom event handling, and automatic state synchronization. And it fits all of this into an easy-to-understand 2kb package.</p>
+<hr />
+<h2 id="attributes">Attributes</h2>
+<p>Nomini attributes generally are <strong>object-like</strong>, meaning the value is a JavaScript object with key-value pairs, <strong>optionally</strong> including the curly braces:</p>
+<pre style="background-color:#272822;color:#f8f8f2;"><code><span>nm-bind=&quot;textContent: () =&gt; name&quot;
+</span></code></pre>
+<p>or:</p>
+<pre style="background-color:#272822;color:#f8f8f2;"><code><span>nm-bind=&quot;{ textContent: () =&gt; name }&quot;
+</span></code></pre>
+<p>Any object-like attribute will have <code>this</code> bound to the element with the attribute. Often, the keys of the object can have <strong>modifiers</strong>, which will be separated by the main key with dots. If a key has modifiers, it must be wrapped in quotes to be parsed correctly.</p>
+<h3 id="nm-data">nm-data</h3>
+<p><code>nm-data</code> allows you to declare a scope of reactive JavaScript data. It will be globally accessible from <code>nm-</code> attributes in this scope only. Scopes are not inherited. If your data is not reactive and it's a simple type, consider using <code>data-*</code> attributes and the <a href="https://nomini.js.org/docs/#dataset"><code>$dataset</code></a> function instead.</p>
+<pre data-lang="html" style="background-color:#272822;color:#f8f8f2;" class="language-html "><code class="language-html" data-lang="html"><span>&lt;</span><span style="color:#f92672;">div </span><span style="color:#a6e22e;">nm-data</span><span>=</span><span style="color:#e6db74;">&quot;name: &#39;Jeff&#39;&quot;</span><span>&gt;
+</span><span>  </span><span style="color:#75715e;">&lt;!-- content here --&gt;
+</span><span>&lt;/</span><span style="color:#f92672;">div</span><span>&gt;
+</span></code></pre>
+<h4 id="local-properties">Local Properties</h4>
+<p>Any key in an <code>nm-data</code> that starts with an underscore will <strong>never</strong> be sent to the server automatically. This is only relevant if working with helpers like <code>$get</code> inside of a scope.</p>
+<pre data-lang="html" style="background-color:#272822;color:#f8f8f2;" class="language-html "><code class="language-html" data-lang="html"><span>&lt;</span><span style="color:#f92672;">div </span><span style="color:#a6e22e;">nm-data</span><span>=</span><span style="color:#e6db74;">&quot;_saved: false&quot;</span><span>&gt;
+</span><span>  </span><span style="color:#75715e;">&lt;!-- content here --&gt;
+</span><span>&lt;/</span><span style="color:#f92672;">div</span><span>&gt;
+</span></code></pre>
+<h4 id="computed-properties">Computed Properties</h4>
+<p>Nomini has no special syntax for computed properties, but because the data scope is a standard object, you can write a member function to compute the property. Note that in member functions <code>this</code> refers to the data scope, not the element.</p>
+<pre data-lang="html" style="background-color:#272822;color:#f8f8f2;" class="language-html "><code class="language-html" data-lang="html"><span>&lt;</span><span style="color:#f92672;">div </span><span style="color:#a6e22e;">nm-data</span><span>=</span><span style="color:#e6db74;">&quot;first: &#39;Pac&#39;, last: &#39;Man&#39;, full() { return `${this.first} ${this.last}` }&quot;</span><span>&gt;
+</span><span>    &lt;</span><span style="color:#f92672;">p </span><span style="color:#a6e22e;">nm-bind</span><span>=</span><span style="color:#e6db74;">&quot;textContent: () =&gt; full()&quot;</span><span>&gt;&lt;/</span><span style="color:#f92672;">p</span><span>&gt;
+</span><span>&lt;/</span><span style="color:#f92672;">div</span><span>&gt;
+</span></code></pre>
+<h3 id="nm-bind">nm-bind</h3>
+<p><code>nm-bind</code> binds any property of an element to a JavaScript expression, whether static or reactive from an <code>nm-data</code>. You can access reactive data declared in an <a href="https://nomini.js.org/docs/#nm-data"><code>nm-data</code></a>, along with any built-in <a href="https://nomini.js.org/docs/#helpers">helpers</a> at any point. Multiple binds can be toggled by providing multiple key/value pairs. All values in a bind are <strong>required</strong> to be an arrow function. If something isn't working, check that it's in an arrow function. The function will be called once upon initialization and again whenever any reactive data that it depends on changes.</p>
+<p><code>nm-bind</code> does not allow binding to arbitrary attributes, but nearly every meaningful attribute has a JS property equivalent. If you want to retrieve custom data, that should be stored in <code>data-*</code> attributes and can be accessed through the <a href="https://nomini.js.org/docs/#dataset"><code>$dataset</code> helper</a>.</p>
+<pre data-lang="html" style="background-color:#272822;color:#f8f8f2;" class="language-html "><code class="language-html" data-lang="html"><span>&lt;</span><span style="color:#f92672;">p </span><span style="color:#a6e22e;">nm-bind</span><span>=</span><span style="color:#e6db74;">&quot;textContent: () =&gt; &#39;Lorem &#39;.repeat(12)&quot;</span><span>&gt;&lt;/</span><span style="color:#f92672;">p</span><span>&gt;
+</span></code></pre>
+<p nm-bind="textContent: () => 'Lorem '.repeat(12)"></p>
+<p>Of course, its greatest strength is when combined with <code>nm-data</code>.</p>
+<pre data-lang="html" style="background-color:#272822;color:#f8f8f2;" class="language-html "><code class="language-html" data-lang="html"><span>&lt;</span><span style="color:#f92672;">div </span><span style="color:#a6e22e;">nm-data</span><span>=</span><span style="color:#e6db74;">&quot;text: &#39;&#39;&quot;</span><span>&gt;
+</span><span>    &lt;</span><span style="color:#f92672;">input </span><span style="color:#a6e22e;">nm-bind</span><span>=</span><span style="color:#e6db74;">&quot;oninput: () =&gt; text = this.value&quot;</span><span>&gt;
+</span><span>    &lt;</span><span style="color:#f92672;">p </span><span style="color:#a6e22e;">nm-bind</span><span>=</span><span style="color:#e6db74;">&quot;textContent: () =&gt; text&quot;</span><span>&gt;&lt;/</span><span style="color:#f92672;">p</span><span>&gt;
+</span><span>&lt;/</span><span style="color:#f92672;">div</span><span>&gt;
+</span></code></pre>
+<div nm-data="text: ''">
+    <input nm-bind="oninput: () => text = this.value">
+    <p nm-bind="textContent: () => text"></p>
+</div>
+<h4 id="event-listeners">Event Listeners</h4>
+<p><code>nm-bind</code> additionally gives you access to inline event listeners, bound like they would be with the built-in <code>on*</code> properties. However, it supports all DOM events, including user-emitted ones or <a href="https://nomini.js.org/docs/#events">library-emitted ones</a>. Multiple events can be listened to by providing multiple key/value pairs. The callback can take an event parameter, and it will not be called until the event is triggered.</p>
+<pre data-lang="html" style="background-color:#272822;color:#f8f8f2;" class="language-html "><code class="language-html" data-lang="html"><span>&lt;</span><span style="color:#f92672;">button </span><span style="color:#a6e22e;">nm-bind</span><span>=</span><span style="color:#e6db74;">&quot;onclick: () =&gt; alert(&#39;OW!&#39;)&quot;</span><span>&gt;Click Me!&lt;/</span><span style="color:#f92672;">button</span><span>&gt;
+</span></code></pre>
+<p><button nm-bind="onclick: () => alert('OW!')">Click Me!</button></p>
+<h5 id="inline-event-modifiers">Inline Event Modifiers</h5>
+<p>Nomini additionally supports some additional syntax sugar for common event handling patterns. Postfix the event name with one or more of these modifiers to change the behavior:</p>
+<ul>
+<li><strong><code>.prevent</code></strong>: Calls <code>e.preventDefault</code>.</li>
+<li><strong><code>.stop</code></strong>: Calls <code>e.stopPropagation</code>.</li>
+<li><strong><code>.debounce&lt;ms&gt;</code></strong>: Debounces the event by the number of milliseconds listed.</li>
+<li><strong><code>.once</code></strong>: Removes the event listener after it's called once.</li>
+<li><strong><code>.window</code></strong>: Adds the event listener to the window instead of the current element.</li>
+</ul>
+<pre data-lang="html" style="background-color:#272822;color:#f8f8f2;" class="language-html "><code class="language-html" data-lang="html"><span>&lt;</span><span style="color:#f92672;">button </span><span style="color:#a6e22e;">nm-bind</span><span>=</span><span style="color:#e6db74;">&quot;&#39;onclick.once&#39;: () =&gt; alert(&#39;After viewed, this message will self-destruct.&#39;)&quot;</span><span>&gt;
+</span><span>    Click Me!
+</span><span>&lt;/</span><span style="color:#f92672;">button</span><span>&gt;
+</span></code></pre>
+<button nm-bind="'onclick.once': () => alert('After viewed, this message will self-destruct.')">
+    Click Me!
+</button>
+<pre data-lang="html" style="background-color:#272822;color:#f8f8f2;" class="language-html "><code class="language-html" data-lang="html"><span>&lt;</span><span style="color:#f92672;">button </span><span style="color:#a6e22e;">nm-bind</span><span>=</span><span style="color:#e6db74;">&quot;&#39;onclick.debounce250&#39;: () =&gt; alert(&#39;Stop bothering me.&#39;)&quot;</span><span>&gt;
+</span><span>    Click Me!
+</span><span>&lt;/</span><span style="color:#f92672;">button</span><span>&gt;
+</span></code></pre>
+<button nm-bind="'onclick.debounce250': () => alert('Stop bothering me.')">
+    Click Me!
+</button>
+<pre data-lang="html" style="background-color:#272822;color:#f8f8f2;" class="language-html "><code class="language-html" data-lang="html"><span>&lt;</span><span style="color:#f92672;">section </span><span style="color:#a6e22e;">nm-bind</span><span>=</span><span style="color:#e6db74;">&quot;&#39;onresize.window.debounce10&#39;: () =&gt; {
+</span><span style="color:#e6db74;">    this.style.height = window.innerHeight / 3 + &#39;px&#39;;
+</span><span style="color:#e6db74;">    this.style.width = window.innerWidth / 3 + &#39;px&#39;;
+</span><span style="color:#e6db74;">}&quot;</span><span>&gt;
+</span><span>    1/3th scale window (resize me)&lt;</span><span style="color:#f92672;">br</span><span>&gt;
+</span><span>    (Yes, this could also be done with vw and vh properties)
+</span><span>&lt;/</span><span style="color:#f92672;">section</span><span>&gt;
+</span></code></pre>
+<section nm-bind="'onresize.window.debounce10': () => {
+    this.style.height = window.innerHeight / 3 + 'px';
+    this.style.width = window.innerWidth / 3 + 'px';
+}">
+    1/3th scale window (resize me)<br>
+    (Yes, this could also be done with vw and vh properties)
+</section>
+<h4 id="nested-binds">Nested Binds</h4>
+<p>You can bind to properties one level deep by separating the levels by dots in your key. Remember to quote the key.</p>
+<pre data-lang="html" style="background-color:#272822;color:#f8f8f2;" class="language-html "><code class="language-html" data-lang="html"><span>&lt;</span><span style="color:#f92672;">section </span><span style="color:#a6e22e;">nm-bind</span><span>=</span><span style="color:#e6db74;">&quot;&#39;style.backgroundColor&#39;: () =&gt; &#39;lightgreen&#39;&quot;</span><span>&gt;
+</span><span>    Words words words
+</span><span>&lt;/</span><span style="color:#f92672;">section</span><span>&gt;
+</span></code></pre>
+<section nm-bind="'style.backgroundColor': () => 'lightgreen'">
+    Words words words
+</section>
+<h4 id="class-support">Class Support</h4>
+<p>You can also bind to classes using the nested bind support. Bind to a class using the <code>class.&lt;classname&gt;</code> property, where the bind function is expected to return a boolean.</p>
+<pre data-lang="html" style="background-color:#272822;color:#f8f8f2;" class="language-html "><code class="language-html" data-lang="html"><span>&lt;</span><span style="color:#f92672;">button </span><span style="color:#a6e22e;">nm-data</span><span>=</span><span style="color:#e6db74;">&quot;red: false&quot; </span><span style="color:#a6e22e;">nm-bind</span><span>=</span><span style="color:#e6db74;">&quot;{
+</span><span style="color:#e6db74;">    &#39;class.demo-red&#39;: () =&gt; red,
+</span><span style="color:#e6db74;">    onclick: () =&gt; red = !red
+</span><span style="color:#e6db74;">}&quot;</span><span>&gt;
+</span><span>    I&#39;m angry
+</span><span>&lt;/</span><span style="color:#f92672;">button</span><span>&gt;
+</span></code></pre>
+<p><button nm-data="red: false" nm-bind="{
+    'class.demo-red': () => red,
+    onclick: () => red = !red
+}">
+I'm angry
+</button></p>
+<h4 id="async-support">Async Support</h4>
+<p>To support async functions, all binds are automatically awaited if required.</p>
+<p><strong>Caution</strong>: Be careful when using async functions. Any property accesses after an <code>await</code> will very likely not be reactive. Async function support is provided for the cases where it's useful, but it can be the source of many hard-to-find bugs.</p>
+<h3 id="nm-ref">nm-ref</h3>
+<p>Grab a reference to the current element and put it into the <code>$refs</code> object.</p>
+<pre data-lang="html" style="background-color:#272822;color:#f8f8f2;" class="language-html "><code class="language-html" data-lang="html"><span>&lt;</span><span style="color:#f92672;">dialog </span><span style="color:#a6e22e;">nm-ref</span><span>=</span><span style="color:#e6db74;">&quot;dialog&quot;</span><span>&gt;
+</span><span>    &lt;</span><span style="color:#f92672;">button </span><span style="color:#a6e22e;">nm-bind</span><span>=</span><span style="color:#e6db74;">&quot;onclick: () =&gt; $refs.dialog.close()&quot;</span><span>&gt;×&lt;/</span><span style="color:#f92672;">button</span><span>&gt;
+</span><span>    You can open dialogs!
+</span><span>&lt;/</span><span style="color:#f92672;">dialog</span><span>&gt;
+</span><span>&lt;</span><span style="color:#f92672;">button </span><span style="color:#a6e22e;">nm-bind</span><span>=</span><span style="color:#e6db74;">&quot;onclick: () =&gt; $refs.dialog.showModal()&quot;</span><span>&gt;Click Me!&lt;/</span><span style="color:#f92672;">button</span><span>&gt;
+</span></code></pre>
+<dialog nm-ref="dialog">
+    <button nm-bind="onclick: () => $refs.dialog.close()">×</button>
+    You can open dialogs!
+</dialog>
+<button nm-bind="onclick: () => $refs.dialog.showModal()">Click Me!</button>
+<h3 id="nm-form">nm-form</h3>
+<p>Purely a convenience helper, it synchronizes all form inputs with the reactive scope by name. It works on a container containing inputs with a <code>name</code> or on inputs themselves. It's equivalent to putting an <code>nm-bind</code> event listener on all of the form elements. Additionally, it will disable any submit buttons if a request is in progress.</p>
+<pre data-lang="html" style="background-color:#272822;color:#f8f8f2;" class="language-html "><code class="language-html" data-lang="html"><span>&lt;</span><span style="color:#f92672;">div </span><span style="color:#a6e22e;">nm-data</span><span>&gt;
+</span><span>    &lt;</span><span style="color:#f92672;">input </span><span style="color:#a6e22e;">name</span><span>=</span><span style="color:#e6db74;">&quot;text&quot; </span><span style="color:#a6e22e;">nm-form</span><span>&gt;
+</span><span>    &lt;</span><span style="color:#f92672;">p </span><span style="color:#a6e22e;">nm-bind</span><span>=</span><span style="color:#e6db74;">&quot;textContent: () =&gt; text&quot;</span><span>&gt;&lt;/</span><span style="color:#f92672;">p</span><span>&gt;
+</span><span>&lt;/</span><span style="color:#f92672;">div</span><span>&gt;
+</span></code></pre>
+<div nm-data>
+    <input name="text" nm-form>
+    <p nm-bind="textContent: () => text"></p>
+</div>
+<h3 id="nm-use">nm-use</h3>
+<p><code>nm-use</code> allows you to grab the contents of a <code>template</code> element with a specified <code>id</code> and swap it into the current element. It also includes <code>&lt;slot&gt;</code> support, so the current contents of the element will be moved into the slot. Props are passed through the inherited <code>nm-data</code> scope and its associated <code>data-*</code> attributes.</p>
+<pre data-lang="html" style="background-color:#272822;color:#f8f8f2;" class="language-html "><code class="language-html" data-lang="html"><span>&lt;</span><span style="color:#f92672;">template </span><span style="color:#a6e22e;">id</span><span>=</span><span style="color:#e6db74;">&quot;card&quot;</span><span>&gt;
+</span><span>    &lt;</span><span style="color:#f92672;">h2 </span><span style="color:#a6e22e;">nm-bind</span><span>=</span><span style="color:#e6db74;">&quot;textContent: () =&gt; title&quot;</span><span>&gt;&lt;/</span><span style="color:#f92672;">h2</span><span>&gt;
+</span><span>    &lt;</span><span style="color:#f92672;">slot</span><span>&gt;&lt;/</span><span style="color:#f92672;">slot</span><span>&gt;
+</span><span>&lt;/</span><span style="color:#f92672;">template</span><span>&gt;
+</span><span>
+</span><span>&lt;</span><span style="color:#f92672;">section </span><span style="color:#a6e22e;">nm-use</span><span>=</span><span style="color:#e6db74;">&quot;card&quot; </span><span style="color:#a6e22e;">nm-data</span><span>=</span><span style="color:#e6db74;">&quot;title: 42&quot;</span><span>&gt;
+</span><span>What is the answer to life, the universe, and everything?
+</span><span>&lt;/</span><span style="color:#f92672;">section</span><span>&gt;
+</span></code></pre>
+<template id="card">
+    <h2 aria-hidden="true" nm-bind="textContent: () => title"></h2>
+    <slot></slot>
+</template>
+<section nm-use="card" nm-data="title: 42">
+What is the answer to life, the universe, and everything?
+</section>
+<hr />
+<h2 id="helpers">Helpers</h2>
+<h3 id="dataset">$dataset</h3>
+<p>Walks up the element tree and collects all <code>data-*</code> attributes in the current <code>nm-data</code> scope.</p>
+<h3 id="fetch-get-post">$fetch/$get/$post</h3>
+<p>All AJAX in Nomini goes through <code>$fetch</code>. Inside any <code>nm-</code> attribute (but almost always <code>nm-on</code>):</p>
+<pre data-lang="js" style="background-color:#272822;color:#f8f8f2;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#a6e22e;">$get</span><span>(</span><span style="color:#e6db74;">&quot;/user&quot;</span><span>)
+</span><span style="color:#a6e22e;">$post</span><span>(</span><span style="color:#e6db74;">&quot;/save&quot;</span><span>, { id: </span><span style="color:#ae81ff;">1 </span><span>})
+</span><span style="color:#a6e22e;">$fetch</span><span>(</span><span style="color:#e6db74;">&quot;/url&quot;</span><span>, </span><span style="color:#e6db74;">&quot;PUT&quot;</span><span>, { foo: </span><span style="color:#ae81ff;">1 </span><span>})
+</span></code></pre>
+<p>Nomini will automatically encode all reactive data, <code>data-*</code> attributes from the scope, and provided data into the request. During the fetch, the reactive <code>_nmFetching</code> will be set to true. The <a href="https://nomini.js.org/docs/#fetcherr"><code>fetcherr</code></a> event will automatically be dispatched on a non-2xx status code or a network error.</p>
+<h4 id="response-format">Response Format</h4>
+<p>Nomini supports two types of responses: oneshot and streaming. Every chunk sent to the server, whether as a oneshot or streaming response, is expected to contain one or more complete HTML fragments with a top-level <code>id</code>. Optionally, the <code>nm-swap</code> attribute is used to determine how the content gets swapped in. Options are: <code>outer</code> (default), <code>inner</code>, <code>before</code>, <code>prepend</code>, <code>append</code>, <code>after</code>. <code>outer</code> will replace the element with the corresponding ID with the new element, all others will discard the new wrapper element and replace the children of the existing element with the children of the wrapper.</p>
+<p>Example server response:</p>
+<pre data-lang="html" style="background-color:#272822;color:#f8f8f2;" class="language-html "><code class="language-html" data-lang="html"><span>    &lt;</span><span style="color:#f92672;">div </span><span style="color:#a6e22e;">id</span><span>=</span><span style="color:#e6db74;">&quot;swap-target&quot;</span><span>&gt;
+</span><span>        </span><span style="color:#75715e;">&lt;!-- content goes here --&gt;
+</span><span>    &lt;/</span><span style="color:#f92672;">div</span><span>&gt;
+</span><span>    &lt;</span><span style="color:#f92672;">table </span><span style="color:#a6e22e;">id</span><span>=</span><span style="color:#e6db74;">&quot;table&quot; </span><span style="color:#a6e22e;">nm-swap</span><span>=</span><span style="color:#e6db74;">&quot;beforeend&quot;</span><span>&gt;
+</span><span>        &lt;</span><span style="color:#f92672;">tr</span><span>&gt;
+</span><span>            </span><span style="color:#75715e;">&lt;!-- content goes here --&gt;
+</span><span>        &lt;/</span><span style="color:#f92672;">tr</span><span>&gt;
+</span><span>    &lt;/</span><span style="color:#f92672;">table</span><span>&gt;
+</span></code></pre>
+<h3 id="nmdata">$nmData</h3>
+<p>Used internally to collect all computed values, primitives, arrays, and other encodable user data for <code>$fetch</code>. Not likely to be needed by users.</p>
+<h3 id="dispatch">$dispatch</h3>
+<p>Dispatch an event on the current element. Can be listened to higher up on the tree by <a href="https://nomini.js.org/docs/#nm-bind"><code>nm-bind</code></a>.</p>
+<pre data-lang="js" style="background-color:#272822;color:#f8f8f2;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#a6e22e;">$dispatch</span><span>(</span><span style="color:#e6db74;">&quot;my-event&quot;</span><span>)
+</span><span style="color:#75715e;">// Second attribute describes &#39;detail&#39; property of the event
+</span><span style="color:#a6e22e;">$dispatch</span><span>(</span><span style="color:#e6db74;">&quot;scary&quot;</span><span>, { run: </span><span style="color:#e6db74;">&quot;away&quot; </span><span>})
+</span><span style="color:#75715e;">// Third attribute is the general options property
+</span><span style="color:#a6e22e;">$dispatch</span><span>(</span><span style="color:#e6db74;">&quot;help-me&quot;</span><span>, { so: </span><span style="color:#e6db74;">&quot;alone&quot; </span><span>}, { bubbles: </span><span style="color:#ae81ff;">false </span><span>})
+</span></code></pre>
+<h3 id="watch">$watch</h3>
+<p>Takes a callback, will run it once on initialization and once whenever its dependent variables change.</p>
+<pre data-lang="html" style="background-color:#272822;color:#f8f8f2;" class="language-html "><code class="language-html" data-lang="html"><span>&lt;</span><span style="color:#f92672;">input </span><span style="color:#a6e22e;">name</span><span>=</span><span style="color:#e6db74;">&quot;text&quot; </span><span style="color:#a6e22e;">nm-data nm-form nm-bind</span><span>=</span><span style="color:#e6db74;">&quot;oninit: () =&gt; $watch(() =&gt; console.log(text))&quot;</span><span>&gt;
+</span></code></pre>
+<input name="text" nm-data nm-form nm-bind="oninit: () => $watch(() => console.log(text))">
+<h3 id="persist">$persist</h3>
+<p>Hydrates a variable with data from localStorage and reactively links it to localStorage.</p>
+<pre data-lang="js" style="background-color:#272822;color:#f8f8f2;" class="language-js "><code class="language-js" data-lang="js"><span style="color:#75715e;">// Call this in &#39;oninit&#39;, assuming &#39;text&#39; is a variable in the data
+</span><span style="color:#a6e22e;">$persist</span><span>(</span><span style="color:#e6db74;">&#39;text&#39;</span><span>)
+</span><span style="color:#75715e;">// Can also provide a custom localStorage key
+</span><span style="color:#a6e22e;">$persist</span><span>(</span><span style="color:#e6db74;">&#39;text&#39;</span><span>, </span><span style="color:#e6db74;">&#39;myText101&#39;</span><span>)
+</span></code></pre>
+<hr />
+<h2 id="events">Events</h2>
+<h3 id="init">init</h3>
+<p>Dispatched on any element as it's initialized by Nomini. Does <strong>not</strong> bubble.</p>
+<pre data-lang="html" style="background-color:#272822;color:#f8f8f2;" class="language-html "><code class="language-html" data-lang="html"><span>&lt;</span><span style="color:#f92672;">p </span><span style="color:#a6e22e;">nm-bind</span><span>=</span><span style="color:#e6db74;">&quot;{ &#39;oninit.debounce2000&#39;: () =&gt; $get(&#39;/refresh&#39;) }&quot;</span><span>&gt;&lt;/</span><span style="color:#f92672;">p</span><span>&gt;
+</span></code></pre>
+<h3 id="destroy">destroy</h3>
+<p>Dispatched on any element when it's about to be swapped out by Nomini. Does <strong>not</strong> bubble.</p>
+<pre data-lang="html" style="background-color:#272822;color:#f8f8f2;" class="language-html "><code class="language-html" data-lang="html"><span>&lt;</span><span style="color:#f92672;">p </span><span style="color:#a6e22e;">nm-bind</span><span>=</span><span style="color:#e6db74;">&quot;{ &#39;oninit.debounce2000&#39;: () =&gt; $get(&#39;/refresh&#39;) }&quot;</span><span>&gt;&lt;/</span><span style="color:#f92672;">p</span><span>&gt;
+</span></code></pre>
+<h3 id="fetcherr">fetcherr</h3>
+<p>Dispatched by <code>$fetch</code> when a request fails or returns a non-2xx response code. Bubbles outside the scope so that it can be handled globally. The <code>detail</code> property contains an <code>err</code> message and a <code>url</code>.</p>
+<hr />
+<h2 id="magic-properties">Magic Properties</h2>
+<h3 id="nmfetching">_nmFetching</h3>
+<p>Reactive boolean value that is set to <code>true</code> whenever a <a href="https://nomini.js.org/docs/#fetch-get-post">fetch</a> is in progress. Can be used to disable buttons or show loading indicators.</p>
+<pre data-lang="html" style="background-color:#272822;color:#f8f8f2;" class="language-html "><code class="language-html" data-lang="html"><span>&lt;</span><span style="color:#f92672;">button </span><span style="color:#a6e22e;">nm-bind</span><span>=</span><span style="color:#e6db74;">&quot;disabled: () =&gt; _nmFetching&quot;</span><span>&gt;Submit&lt;/</span><span style="color:#f92672;">button</span><span>&gt;
+</span></code></pre>
+<h3 id="nmabort">_nmAbort</h3>
+<p>An <a rel="noopener" target="_blank" href="https://developer.mozilla.org/en-US/docs/Web/API/AbortController"><code>AbortController</code></a> that is attached to the current fetch. Call <code>abort</code> on it to abort an in-progress fetch.</p>
+<pre data-lang="js" style="background-color:#272822;color:#f8f8f2;" class="language-js "><code class="language-js" data-lang="js"><span>_nmAbort.</span><span style="color:#66d9ef;">abort</span><span>()
+</span></code></pre>
+
+</article>
+
+	</main>
+</body>
+
+</html>
