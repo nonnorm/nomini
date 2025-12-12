@@ -90,15 +90,24 @@
             fetch(url, opts)
                 .then(async (res) => {
                     if (!res.ok) {
-                        const errorText = await res.text();
-                        throw new Error(`${res.statusText}: ${errorText}`);
+                        throw new Error(`${res.statusText}: ${await res.text()}`);
                     }
 
-                    const decoder = new TextDecoder();
+                    const stream = res.body.pipeThrough(new TextDecoderStream()).getReader();
+                    let buf = "";
+                    let timeout;
 
-                    for await (const chunk of res.body) {
-                        const buf = decoder.decode(chunk);
-                        swap(buf);
+                    while (true) {
+                        const { done, value } = await stream.read();
+                        if (done) break;
+
+                        buf += value;
+
+                        clearTimeout(timeout);
+                        timeout = setTimeout(() => {
+                            swap(buf);
+                            buf = "";
+                        }, 20);
                     }
                 })
                 .catch((err) => dispatch(el, "fetcherr", { detail: { err, url } }))
@@ -330,29 +339,30 @@
 
             Object.entries(props).forEach(([key, val]) => {
                 if (key.startsWith("on")) {
+                    // --- BEGIN events
                     const [eventName, ...mods] = key.slice(2).split(".");
 
-                    // --- BEGIN evtmods
                     const debounceMod = mods.find((val) => val.startsWith("debounce"));
                     const delay = +debounceMod?.slice(8);
-                    // --- END evtmods
 
                     const listener = (e) => runWithEl(bindEl, () => {
-                        // --- BEGIN evtmods
 
                         if (mods.includes("prevent")) e.preventDefault();
                         if (mods.includes("stop")) e.stopPropagation();
 
                         if (delay) proxyData.$debounce(() => val(e), delay);
-                        else
-                            // --- END evtmods
-                            val(e);
+                        else val(e);
                     });
 
-                    // I'm not getting rid of these modifiers, it's so short that it probably won't matter
                     (mods.includes("window") ? window : bindEl).addEventListener(eventName, listener, {
                         once: mods.includes("once"),
                     });
+
+                    return;
+                    // --- END events
+
+                    // If special event handling isn't enabled just do a normal event listener
+                    bindEl.addEventListener(key.slice(2), () => runWithEl(bindEl, val));
                 } else {
                     const [main, sub] = key.split(".");
                     runWithEl(bindEl,
