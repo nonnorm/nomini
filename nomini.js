@@ -168,7 +168,7 @@
         const template = document.createElement("template");
         template.innerHTML = text;
 
-        for (const fragment of template.content.children) {
+        for (const fragment of [...template.content.children]) {
             if (!fragment.id) {
                 console.warn("[Nomini] Fragment is missing an id: ", fragment);
                 continue;
